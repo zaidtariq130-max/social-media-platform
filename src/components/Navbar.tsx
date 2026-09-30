@@ -1,6 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import logoutIcon from "../assets/logout-icon.svg"
-import profileIcon from "../assets/user-profile-icon.svg"
+import { colors } from "../theme"
 
 interface NavbarProps {
   isLoggedIn: boolean
@@ -20,14 +19,24 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
+    <header
+      className="sticky top-0 z-50 backdrop-blur-md border-b shadow-xs transition-colors"
+      style={{
+        backgroundColor: `${colors.cardBackground}f2`,
+        borderColor: colors.border,
+      }}
+    >
       <nav className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand / Logo */}
+
         <Link
           to="/"
-          className="flex items-center gap-2.5 font-bold text-lg sm:text-xl text-slate-900 tracking-tight group"
+          className="flex items-center gap-2.5 font-bold text-lg sm:text-xl tracking-tight group"
+          style={{ color: colors.text }}
         >
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform"
+            style={{ backgroundColor: colors.primary }}
+          >
             <svg
               className="w-5 h-5 fill-current"
               viewBox="0 0 24 24"
@@ -36,66 +45,108 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
             </svg>
           </div>
-          <span className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-            SocialApp
-          </span>
+
+          <span>SocialApp</span>
         </Link>
 
         {/* Navigation Links & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
           <Link
             to="/"
-            className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+            className="px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:bg-slate-100"
+            style={
               isActive("/")
-                ? "bg-blue-50 text-blue-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            }`}
+                ? {
+                    backgroundColor: colors.activeBackground,
+                    color: colors.iconActive,
+                  }
+                : {
+                    color: colors.iconInactive,
+                  }
+            }
           >
-            <svg className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            <svg
+              className="w-4 h-4 sm:w-4.5 sm:h-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+              <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
+
             <span>Home</span>
           </Link>
 
           <Link
             to="/profile"
-            className={`px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 group ${
+            className="px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 group"
+            style={
               isActive("/profile")
-                ? "bg-blue-50 text-blue-600 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            }`}
+                ? {
+                    backgroundColor: colors.activeBackground,
+                    color: colors.iconActive,
+                  }
+                : {
+                    color: colors.iconInactive,
+                  }
+            }
           >
-            <div className="w-5 h-5 flex items-center justify-center">
-              <img
-                src={profileIcon}
-                alt="Profile"
-                className="w-4.5 h-4.5 object-contain opacity-75 group-hover:opacity-100 transition-opacity"
-              />
-            </div>
+            <svg
+              className="w-4 h-4 sm:w-4.5 sm:h-4.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+
             <span>Profile</span>
           </Link>
 
           {isLoggedIn ? (
             <button
               onClick={handleLogout}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium text-rose-600 hover:text-rose-700 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-200/80 transition-all duration-200 cursor-pointer active:scale-95 group"
+              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium bg-rose-50/70 hover:bg-rose-100 transition-all duration-200 cursor-pointer active:scale-95 group"
+              style={{
+                color: colors.danger,
+                border: `1px solid ${colors.danger}`,
+              }}
               title="Logout"
             >
-              <img
-                src={logoutIcon}
-                alt="Logout"
-                className="w-4 h-4 object-contain opacity-75 group-hover:opacity-100 transition-opacity"
-              />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+
               <span className="hidden xs:inline sm:inline">Logout</span>
             </button>
           ) : (
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/20 transition-all duration-200 active:scale-95"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white shadow-sm shadow-blue-500/20 transition-all duration-200 active:scale-95"
+              style={{ backgroundColor: colors.primary }}
             >
               Login
             </Link>
           )}
+
         </div>
       </nav>
     </header>
