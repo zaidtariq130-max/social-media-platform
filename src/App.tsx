@@ -5,6 +5,8 @@ import Profile from "./pages/Profile"
 import { useState, useEffect } from "react"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import ProtectedLayout from "./routes/ProtectedLayout"
+import Signup from "./pages/Signup"
+import Welcome from "./pages/Welcome"
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -23,8 +25,12 @@ function App() {
           path="/login"
           element={<Login setIsLoggedIn={setIsLoggedIn} />}
         />
-
+        <Route
+        path="/signup"
+        element={<Signup setIsLoggedIn={setIsLoggedIn} />}
+       />
         <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
+          <Route path="/welcome" element={<Welcome />} />
           <Route
             element={
               <ProtectedLayout

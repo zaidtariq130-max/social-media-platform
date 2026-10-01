@@ -1,12 +1,12 @@
 import type { ReactNode } from "react"
-import { colors } from "../theme"
+import { colors, gradients } from "../theme"
 
 interface ButtonProp {
   children: ReactNode
   onClick?: () => void
   type?: "button" | "submit" | "reset"
   className?: string
-  variant?: "primary" | "secondary" | "danger" | "outline" | "ghost"
+  variant?: "primary" | "secondary" | "danger" | "outline" | "ghost" | "gradient"
   disabled?: boolean
 }
 
@@ -34,7 +34,12 @@ export default function Button({
 
     ghost:
       "",
+
+    gradient:
+      "text-white shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40",
   }
+
+  const radius = className.includes("rounded") ? "" : "rounded-xl"
 
   return (
     <button
@@ -58,6 +63,8 @@ export default function Button({
               color: colors.text,
               borderColor: colors.border,
             }
+          : variant === "gradient"
+          ? { backgroundImage: gradients.primary }
           : variant === "ghost"
           ? {
               backgroundColor: colors.ghostBackground,
@@ -65,7 +72,7 @@ export default function Button({
             }
           : undefined
       }
-      className={`inline-flex items-center justify-center gap-2 font-medium px-4 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none select-none text-sm ${variantStyles[variant] || variantStyles.primary} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 font-medium px-4 py-2.5 ${radius} transition-all duration-200 active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:pointer-events-none select-none text-sm ${variantStyles[variant] || variantStyles.primary} ${className}`}
     >
       {children}
     </button>

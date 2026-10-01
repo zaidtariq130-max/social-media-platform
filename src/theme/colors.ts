@@ -21,4 +21,13 @@ export const colors: ThemeColors = {
   iconHover: "#0f172a",
   activeBackground: "#eff6ff",
   activeBorder: "#bfdbfe",
+
+  gradientStart: "#3b82f6",
+  gradientEnd: "#1d4ed8",
+  inputBackground: "#f1f5f9",
+  mutedText: "#94a3b8",
+}
+
+export const gradients = {
+  primary: `linear-gradient(135deg, ${colors.gradientStart}, ${colors.gradientEnd})`,
 }

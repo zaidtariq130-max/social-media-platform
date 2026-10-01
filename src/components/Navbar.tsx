@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { colors } from "../theme"
+import { BrandIcon, HomeIcon, LogoutIcon, UserIcon } from "./icons"
 
 interface NavbarProps {
   isLoggedIn: boolean
@@ -37,13 +38,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             className="w-9 h-9 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/25 group-hover:scale-105 transition-transform"
             style={{ backgroundColor: colors.primary }}
           >
-            <svg
-              className="w-5 h-5 fill-current"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
-            </svg>
+            <BrandIcon className="w-5 h-5" />
           </div>
 
           <span>SocialApp</span>
@@ -65,18 +60,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
                   }
             }
           >
-            <svg
-              className="w-4 h-4 sm:w-4.5 sm:h-4.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" />
-            </svg>
+            <HomeIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
 
             <span>Home</span>
           </Link>
@@ -95,18 +79,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
                   }
             }
           >
-            <svg
-              className="w-4 h-4 sm:w-4.5 sm:h-4.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              <circle cx="12" cy="7" r="4" />
-            </svg>
+            <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
 
             <span>Profile</span>
           </Link>
@@ -121,19 +94,7 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
               }}
               title="Logout"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
-              </svg>
+              <LogoutIcon className="w-4 h-4" />
 
               <span className="hidden xs:inline sm:inline">Logout</span>
             </button>

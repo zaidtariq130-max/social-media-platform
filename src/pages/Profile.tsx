@@ -1,4 +1,5 @@
 import { colors, spacing, typography } from "../theme"
+import { MailIcon, UserIcon } from "../components/icons"
 
 export default function Profile() {
   return (
@@ -19,19 +20,7 @@ export default function Profile() {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600" />
           <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px]" />
           <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-medium text-white flex items-center gap-1.5">
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
+            <UserIcon className="w-3.5 h-3.5" />
             <span>Active Member</span>
           </div>
         </div>
@@ -76,15 +65,7 @@ export default function Profile() {
               className={`${typography.small} sm:text-base flex items-center gap-2`}
               style={{ color: colors.secondaryText }}
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                style={{ color: colors.iconInactive }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+              <MailIcon className="w-4 h-4" style={{ color: colors.iconInactive }} />
               <span>zaid@example.com</span>
             </p>
           </div>

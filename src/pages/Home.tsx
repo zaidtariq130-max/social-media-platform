@@ -3,6 +3,7 @@ import PostCard from "../components/PostCard"
 import Button from "../components/Button"
 import type { Post } from "../types"
 import { colors, spacing, typography } from "../theme"
+import { ChatIcon, CheckIcon, PencilSquareIcon, PlusIcon } from "../components/icons"
 
 function Home() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -124,19 +125,7 @@ function Home() {
         {editingPost && (
           <div className="mb-3 flex items-center justify-between bg-amber-50 text-amber-800 border border-amber-200/80 px-3.5 py-2 rounded-xl text-xs sm:text-sm">
             <span className="font-medium flex items-center gap-1.5">
-              <svg
-                className="w-4 h-4 text-amber-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
-              </svg>
+              <PencilSquareIcon className="w-4 h-4 text-amber-600" />
 
               Editing post #{editingPost.id}
             </span>
@@ -188,36 +177,12 @@ function Home() {
                 <Button onClick={handleCreatePost}>
                   {editingPost ? (
                     <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
+                      <CheckIcon className="w-4 h-4" />
                       Update Post
                     </>
                   ) : (
                     <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
+                      <PlusIcon className="w-4 h-4" />
                       Create Post
                     </>
                   )}
@@ -251,19 +216,7 @@ function Home() {
                 color: colors.iconActive,
               }}
             >
-              <svg
-                className="w-7 h-7"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                />
-              </svg>
+              <ChatIcon className="w-7 h-7" strokeWidth={1.5} />
             </div>
 
             <h3

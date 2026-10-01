@@ -9,7 +9,7 @@ export const theme: Theme = {
   typography,
 }
 
-export { colors } from "./colors"
+export { colors, gradients } from "./colors"
 export { spacing } from "./spacing"
 export { typography } from "./typography"
 export type * from "./types"

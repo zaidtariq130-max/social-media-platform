@@ -19,6 +19,11 @@ export interface ThemeColors {
   iconHover: string
   activeBackground: string
   activeBorder: string
+
+  gradientStart: string
+  gradientEnd: string
+  inputBackground: string
+  mutedText: string
 }
 
 export interface ThemeSpacing {
