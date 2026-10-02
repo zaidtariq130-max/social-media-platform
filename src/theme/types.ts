@@ -24,6 +24,11 @@ export interface ThemeColors {
   gradientEnd: string
   inputBackground: string
   mutedText: string
+
+  sidebarBackground: string
+  headerBackground: string
+  dangerBackground: string
+  overlay: string
 }
 
 export interface ThemeSpacing {
@@ -42,8 +47,25 @@ export interface ThemeTypography {
   small: string
 }
 
+export interface ThemeLayout {
+  breakpoint: number
+  gridColumns: string
+  sidebarWidthExpanded: string
+  sidebarWidthCollapsed: string
+  sidebarSlotMobile: string
+  sidebarSlotExpanded: string
+  sidebarSlotCollapsed: string
+  headerHeight: string
+  headerPadding: string
+  contentPadding: string
+  sidebarOverlayHidden: string
+  sidebarAsideFull: string
+  sidebarShadowExpanded: string
+}
+
 export interface Theme {
   colors: ThemeColors
   spacing: ThemeSpacing
   typography: ThemeTypography
+  layout: ThemeLayout
 }

@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react"
 import { Outlet } from "react-router-dom"
-import Navbar from "../components/Navbar"
-import { colors, spacing, typography } from "../theme"
+import Sidebar from "../components/Sidebar"
+import Header from "../components/Header"
+import { colors, typography, layout } from "../theme"
 
 interface ProtectedLayoutProps {
   isLoggedIn: boolean
@@ -9,31 +11,44 @@ interface ProtectedLayoutProps {
 
 export default function ProtectedLayout({
   isLoggedIn,
-  setIsLoggedIn
+  setIsLoggedIn,
 }: ProtectedLayoutProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => window.innerWidth >= layout.breakpoint
+  )
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(min-width: ${layout.breakpoint}px)`)
+    const onChange = (e: MediaQueryListEvent) => setIsSidebarOpen(e.matches)
+
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+  }, [])
+
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans ${typography.body}`}
+      className={`min-h-screen font-sans ${typography.body}`}
       style={{
         backgroundColor: colors.background,
         color: colors.text,
       }}
     >
-      <Navbar
-        isLoggedIn={isLoggedIn}
-        setIsLoggedIn={setIsLoggedIn}
-      />
+      <div className={`grid min-h-screen ${layout.gridColumns}`}>
+        <Sidebar
+          isOpen={isSidebarOpen}
+          setIsOpen={setIsSidebarOpen}
+          isLoggedIn={isLoggedIn}
+          setIsLoggedIn={setIsLoggedIn}
+        />
 
-      <main
-        className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8"
-        style={{
-          paddingTop: spacing.lg,
-          paddingBottom: spacing.lg,
-        }}
-      >
-        <Outlet />
-      </main>
+        <div className="min-w-0 flex flex-col">
+          <Header />
+
+          <main className={`flex-1 ${layout.contentPadding}`}>
+            <Outlet />
+          </main>
+        </div>
+      </div>
     </div>
   )
 }
-

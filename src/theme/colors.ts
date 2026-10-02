@@ -26,6 +26,11 @@ export const colors: ThemeColors = {
   gradientEnd: "#1d4ed8",
   inputBackground: "#f1f5f9",
   mutedText: "#94a3b8",
+
+  sidebarBackground: "#ffffff",
+  headerBackground: "#ffffff",
+  dangerBackground: "#fff1f2",
+  overlay: "rgba(15, 23, 42, 0.4)",
 }
 
 export const gradients = {

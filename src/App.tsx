@@ -7,14 +7,15 @@ import ProtectedRoute from "./routes/ProtectedRoute"
 import ProtectedLayout from "./routes/ProtectedLayout"
 import Signup from "./pages/Signup"
 import Welcome from "./pages/Welcome"
+import { AUTH_STORAGE_KEY } from "./config/app"
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem("isLoggedIn") === "true"
+    return localStorage.getItem(AUTH_STORAGE_KEY) === "true"
   })
 
   useEffect(() => {
-    localStorage.setItem("isLoggedIn", String(isLoggedIn))
+    localStorage.setItem(AUTH_STORAGE_KEY, String(isLoggedIn))
   }, [isLoggedIn])
 
   return (
