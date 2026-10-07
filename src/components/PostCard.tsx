@@ -5,14 +5,19 @@ import { ClockIcon, EditIcon, TrashIcon } from "./icons"
 
 interface postprops {
   post: Post
-  onDelete: (id: number) => void
+  onDelete: (id: string) => void
   onEdit: (post: Post) => void
 }
 
-export default function PostCard({ post, onDelete, onEdit }: postprops) {
+export default function PostCard({
+  post,
+  onDelete,
+  onEdit,
+}: postprops) {
   const formattedDate = (() => {
     try {
       const d = new Date(post.createdAt)
+
       if (!isNaN(d.getTime())) {
         return d.toLocaleDateString(undefined, {
           month: "short",
@@ -23,8 +28,9 @@ export default function PostCard({ post, onDelete, onEdit }: postprops) {
         })
       }
     } catch {
-     
+      // Keep original date if formatting fails
     }
+
     return post.createdAt
   })()
 
@@ -43,14 +49,18 @@ export default function PostCard({ post, onDelete, onEdit }: postprops) {
             className="w-10 h-10 rounded-full text-white font-bold flex items-center justify-center text-sm shadow-sm ring-2 ring-blue-50 shrink-0"
             style={{ backgroundColor: colors.primary }}
           >
-            {post.username ? post.username.charAt(0).toUpperCase() : "U"}
+            {post.user.username
+              ? post.user.username.charAt(0).toUpperCase()
+              : "U"}
           </div>
+
           <div>
             <h3
               className={`text-base ${typography.heading} flex items-center gap-2`}
               style={{ color: colors.text }}
             >
-              <span>{post.username}</span>
+              <span>{post.user.username}</span>
+
               <span
                 className={`${typography.small} font-normal px-2 py-0.5 rounded-full`}
                 style={{
@@ -58,9 +68,10 @@ export default function PostCard({ post, onDelete, onEdit }: postprops) {
                   color: colors.secondaryText,
                 }}
               >
-                #{post.id}
+                #{post._id}
               </span>
             </h3>
+
             <p
               className={`${typography.small} flex items-center gap-1.5 mt-0.5`}
               style={{ color: colors.secondaryText }}
@@ -94,9 +105,10 @@ export default function PostCard({ post, onDelete, onEdit }: postprops) {
           <EditIcon className="w-3.5 h-3.5" />
           Edit
         </Button>
+
         <Button
           variant="danger"
-          onClick={() => onDelete(post.id)}
+          onClick={() => onDelete(post._id)}
           className={`${typography.small} py-1.5 sm:py-2 px-3 sm:px-4`}
         >
           <TrashIcon className="w-3.5 h-3.5" />
@@ -106,3 +118,4 @@ export default function PostCard({ post, onDelete, onEdit }: postprops) {
     </article>
   )
 }
+

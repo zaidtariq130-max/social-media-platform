@@ -2,21 +2,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Profile from "./pages/Profile"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import ProtectedLayout from "./routes/ProtectedLayout"
 import Signup from "./pages/Signup"
 import Welcome from "./pages/Welcome"
-import { AUTH_STORAGE_KEY } from "./config/app"
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
-    return localStorage.getItem(AUTH_STORAGE_KEY) === "true"
+    return Boolean(localStorage.getItem("token"))
   })
-
-  useEffect(() => {
-    localStorage.setItem(AUTH_STORAGE_KEY, String(isLoggedIn))
-  }, [isLoggedIn])
 
   return (
     <BrowserRouter>
@@ -26,12 +21,16 @@ function App() {
           path="/login"
           element={<Login setIsLoggedIn={setIsLoggedIn} />}
         />
+
         <Route
-        path="/signup"
-        element={<Signup setIsLoggedIn={setIsLoggedIn} />}
-       />
+          path="/signup"
+          element={<Signup setIsLoggedIn={setIsLoggedIn} />}
+        />
+
         <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} />}>
+
           <Route path="/welcome" element={<Welcome />} />
+
           <Route
             element={
               <ProtectedLayout
@@ -43,6 +42,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
+
         </Route>
 
       </Routes>

@@ -7,13 +7,16 @@ interface NavbarProps {
   setIsLoggedIn: (value: boolean) => void
 }
 
-export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
+export default function Navbar({
+  isLoggedIn,
+  setIsLoggedIn,
+}: NavbarProps) {
   const navigate = useNavigate()
   const location = useLocation()
 
   function handleLogout() {
     setIsLoggedIn(false)
-    localStorage.removeItem("isLoggedIn")
+    localStorage.removeItem("token")
     navigate("/login")
   }
 
@@ -28,7 +31,6 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
       }}
     >
       <nav className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-
         <Link
           to="/"
           className="flex items-center gap-2.5 font-bold text-lg sm:text-xl tracking-tight group"
@@ -44,7 +46,6 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
           <span>SocialApp</span>
         </Link>
 
-        {/* Navigation Links & Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
           <Link
             to="/"
@@ -61,7 +62,6 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             }
           >
             <HomeIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-
             <span>Home</span>
           </Link>
 
@@ -80,7 +80,6 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
             }
           >
             <UserIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-
             <span>Profile</span>
           </Link>
 
@@ -95,8 +94,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
               title="Logout"
             >
               <LogoutIcon className="w-4 h-4" />
-
-              <span className="hidden xs:inline sm:inline">Logout</span>
+              <span className="hidden xs:inline sm:inline">
+                Logout
+              </span>
             </button>
           ) : (
             <Link
@@ -107,9 +107,9 @@ export default function Navbar({ isLoggedIn, setIsLoggedIn }: NavbarProps) {
               Login
             </Link>
           )}
-
         </div>
       </nav>
     </header>
   )
 }
+

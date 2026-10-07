@@ -1,8 +1,8 @@
 import type { CSSProperties } from "react"
 import { Link, useLocation } from "react-router-dom"
-import { BrandIcon, HomeIcon, UserIcon, LogoutIcon, ChevronLeftIcon } from "./icons"
+import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,} from "./icons"
 import { colors, layout } from "../theme"
-import { APP_NAME, AUTH_STORAGE_KEY } from "../config/app"
+import { APP_NAME } from "../config/app"
 
 interface SidebarProps {
   isOpen: boolean
@@ -15,7 +15,6 @@ const themeVars = {
   "--nav-hover": colors.ghostBackground,
   "--nav-danger-hover": colors.dangerBackground,
 } as CSSProperties
-
 
 const navLinks = [
   { to: "/", label: "Home", Icon: HomeIcon },
@@ -32,7 +31,7 @@ export default function Sidebar({
 
   function handleLogout() {
     setIsLoggedIn(false)
-    localStorage.removeItem(AUTH_STORAGE_KEY)
+    localStorage.removeItem("token")
   }
 
   function closeOnMobile() {
@@ -48,7 +47,6 @@ export default function Sidebar({
   const navItemClass = `flex items-center gap-3 rounded-xl px-3 py-3 transition ${
     isOpen ? "" : "justify-center"
   }`
-
 
   return (
     <>
@@ -172,3 +170,6 @@ export default function Sidebar({
     </>
   )
 }
+
+
+

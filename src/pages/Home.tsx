@@ -3,62 +3,213 @@ import PostCard from "../components/PostCard"
 import Button from "../components/Button"
 import type { Post } from "../types"
 import { colors, spacing, typography } from "../theme"
-import { ChatIcon, CheckIcon, PencilSquareIcon, PlusIcon } from "../components/icons"
+import {
+  ChatIcon,
+  CheckIcon,
+  PencilSquareIcon,
+  PlusIcon,
+} from "../components/icons"
 
 function Home() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const [posts, setPosts] = useState<Post[]>(() => {
-    try {
-      const saved = localStorage.getItem("posts")
-      return saved ? JSON.parse(saved) : []
-    } catch {
-      return []
-    }
-  })
 
+  const [posts, setPosts] = useState<Post[]>([])
   const [editingPost, setEditingPost] = useState<Post | null>(null)
   const [postContent, setpostContent] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [creating, setCreating] = useState(false)
+  const [username, setUsername] = useState("")
 
   useEffect(() => {
-    localStorage.setItem("posts", JSON.stringify(posts))
-  }, [posts])
+    const token = localStorage.getItem("token")
 
-  function handleCreatePost() {
+    if (!token) {
+      setError("No token found")
+      setLoading(false)
+      return
+    }
+
+    // GET PROFILE
+    fetch("http://localhost:5000/api/auth/profile", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Profile API:", data)
+        setUsername(data.user.username)
+      })
+      .catch((error) => {
+        console.error("Profile error:", error)
+      })
+
+    // GET POSTS
+    fetch("http://localhost:5000/api/posts", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch posts")
+        }
+
+        return response.json()
+      })
+      .then((data) => {
+        console.log("Posts API:", data)
+        setPosts(data.posts)
+      })
+      .catch((error) => {
+        console.error("Get posts error:", error)
+        setError("Unable to load posts")
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
+
+  async function handleCreatePost() {
     if (postContent.trim() === "") {
       return
     }
 
-    if (editingPost) {
-      setPosts((previousPosts) =>
-        previousPosts.map((p) =>
-          p.id === editingPost.id ? { ...p, content: postContent } : p
-        )
-      )
+    const token = localStorage.getItem("token")
 
-      setEditingPost(null)
-      setpostContent("")
+    if (!token) {
+      setError("No token found")
       return
     }
 
-    const newPost: Post = {
-      id: Date.now(),
-      username: "Zaid",
-      content: postContent,
-      createdAt: new Date().toISOString(),
-    }
+    setCreating(true)
+    setError("")
 
-    setPosts((previousPosts) => [...previousPosts, newPost])
-    setpostContent("")
+    try {
+      // EDIT POST
+      if (editingPost) {
+        const response = await fetch(
+          `http://localhost:5000/api/posts/${editingPost._id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              content: postContent,
+            }),
+          }
+        )
+
+        const data = await response.json()
+
+        console.log("Update Post API:", data)
+
+        if (!response.ok) {
+          setError(data.message || "Failed to update post")
+          return
+        }
+
+        setPosts((previousPosts) =>
+          previousPosts.map((post) =>
+            post._id === editingPost._id ? data.post : post
+          )
+        )
+
+        setEditingPost(null)
+        setpostContent("")
+
+        return
+      }
+
+      // CREATE POST
+      const response = await fetch("http://localhost:5000/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          content: postContent,
+        }),
+      })
+
+      const data = await response.json()
+
+      console.log("Create Post API:", data)
+
+      if (!response.ok) {
+        setError(data.message || "Failed to create post")
+        return
+      }
+
+      setPosts((previousPosts) => [
+        data.post,
+        ...previousPosts,
+      ])
+
+      setpostContent("")
+    } catch (error) {
+      console.error("Post error:", error)
+      setError("Unable to connect to the server")
+    } finally {
+      setCreating(false)
+    }
   }
 
-  function handleDeletePost(id: number) {
-    setPosts((previousPosts) => previousPosts.filter((p) => p.id !== id))
+  // DELETE POST
+  async function handleDeletePost(id: string) {
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      setError("No token found")
+      return
+    }
+
+    setError("")
+
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/posts/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      console.log("Delete Post API:", data)
+
+      if (!response.ok) {
+        setError(data.message || "Failed to delete post")
+        return
+      }
+
+      setPosts((previousPosts) =>
+        previousPosts.filter((post) => post._id !== id)
+      )
+    } catch (error) {
+      console.error("Delete post error:", error)
+      setError("Unable to connect to the server")
+    }
   }
 
   function handleEditPost(post: Post) {
     setEditingPost(post)
     setpostContent(post.content)
-    window.scrollTo({ top: 0, behavior: "smooth" })
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+
     setTimeout(() => {
       textareaRef.current?.focus()
     }, 100)
@@ -106,7 +257,7 @@ function Home() {
             <span
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: colors.primary }}
-            ></span>
+            />
 
             {posts.length} {posts.length === 1 ? "Post" : "Posts"}
           </span>
@@ -126,8 +277,7 @@ function Home() {
           <div className="mb-3 flex items-center justify-between bg-amber-50 text-amber-800 border border-amber-200/80 px-3.5 py-2 rounded-xl text-xs sm:text-sm">
             <span className="font-medium flex items-center gap-1.5">
               <PencilSquareIcon className="w-4 h-4 text-amber-600" />
-
-              Editing post #{editingPost.id}
+              Editing post
             </span>
 
             <button
@@ -144,7 +294,7 @@ function Home() {
             className="w-10 h-10 rounded-full text-white font-bold flex items-center justify-center text-sm shadow-sm ring-2 ring-blue-50 shrink-0"
             style={{ backgroundColor: colors.primary }}
           >
-            Z
+            {username ? username.charAt(0).toUpperCase() : "U"}
           </div>
 
           <div className="flex-1 space-y-3">
@@ -169,13 +319,21 @@ function Home() {
 
               <div className="flex items-center gap-2">
                 {editingPost && (
-                  <Button variant="ghost" onClick={handleCancelEdit}>
+                  <Button
+                    variant="ghost"
+                    onClick={handleCancelEdit}
+                  >
                     Cancel
                   </Button>
                 )}
 
-                <Button onClick={handleCreatePost}>
-                  {editingPost ? (
+                <Button
+                  onClick={handleCreatePost}
+                  disabled={creating}
+                >
+                  {creating ? (
+                    editingPost ? "Updating..." : "Creating..."
+                  ) : editingPost ? (
                     <>
                       <CheckIcon className="w-4 h-4" />
                       Update Post
@@ -191,6 +349,12 @@ function Home() {
             </div>
           </div>
         </div>
+
+        {error && (
+          <p className="text-sm text-red-500 mt-3">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="space-y-4">
@@ -201,7 +365,22 @@ function Home() {
           <span>Recent Updates</span>
         </h2>
 
-        {posts.length === 0 ? (
+        {loading ? (
+          <div
+            className="rounded-3xl p-8 border text-center"
+            style={{
+              backgroundColor: colors.cardBackground,
+              borderColor: colors.border,
+            }}
+          >
+            <p
+              className={typography.small}
+              style={{ color: colors.secondaryText }}
+            >
+              Loading posts...
+            </p>
+          </div>
+        ) : posts.length === 0 ? (
           <div
             className="rounded-3xl p-8 sm:p-12 border text-center flex flex-col items-center justify-center gap-3"
             style={{
@@ -238,7 +417,7 @@ function Home() {
           <div className="flex flex-col gap-4">
             {posts.map((p) => (
               <PostCard
-                key={p.id}
+                key={p._id}
                 post={p}
                 onDelete={handleDeletePost}
                 onEdit={handleEditPost}
@@ -252,4 +431,3 @@ function Home() {
 }
 
 export default Home
-

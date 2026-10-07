@@ -16,9 +16,12 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [confirmError, setConfirmError] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
   const navigate = useNavigate()
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
     if (password !== confirmPassword) {
@@ -27,8 +30,42 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
     }
 
     setConfirmError("")
-    setIsLoggedIn(true)
-    navigate("/welcome")
+    setError("")
+    setLoading(true)
+
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            username: username,
+            email: email,
+            password: password,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      console.log("Signup API Response:", data)
+
+      if (!response.ok) {
+        setError(data.message || "Signup failed")
+        return
+      }
+      localStorage.setItem("token", data.token)
+      setIsLoggedIn(true)
+      navigate("/welcome")
+    } catch (error) {
+      console.error("Signup error:", error)
+      setError("Unable to connect to the server")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -60,6 +97,7 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
           value={username}
           onChange={(e) => setUserName(e.target.value)}
         />
+
         <Input
           label="Email"
           type="email"
@@ -70,6 +108,7 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
         <Input
           label="Password"
           type="password"
@@ -80,6 +119,7 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
+
         <Input
           label="Confirm password"
           type="password"
@@ -93,12 +133,19 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
         />
       </div>
 
+      {error && (
+        <p className="text-sm text-red-500">
+          {error}
+        </p>
+      )}
+
       <Button
         type="submit"
         variant="gradient"
         className="rounded-full px-12 py-3 text-sm tracking-wide"
+        disabled={loading}
       >
-        Sign up
+        {loading ? "Signing up..." : "Sign up"}
       </Button>
     </form>
   )
