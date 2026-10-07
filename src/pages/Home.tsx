@@ -3,6 +3,7 @@ import PostCard from "../components/PostCard"
 import Button from "../components/Button"
 import type { Post } from "../types"
 import { colors, spacing, typography } from "../theme"
+import { authFetch } from "../utils/api"
 import {
   ChatIcon,
   CheckIcon,
@@ -31,7 +32,7 @@ function Home() {
     }
 
     // GET PROFILE
-    fetch("http://localhost:5000/api/auth/profile", {
+    authFetch("http://localhost:5000/api/auth/profile", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,7 +40,7 @@ function Home() {
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Profile API:", data)
+        
         setUsername(data.user.username)
       })
       .catch((error) => {
@@ -47,7 +48,7 @@ function Home() {
       })
 
     // GET POSTS
-    fetch("http://localhost:5000/api/posts", {
+    authFetch("http://localhost:5000/api/posts", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -61,7 +62,7 @@ function Home() {
         return response.json()
       })
       .then((data) => {
-        console.log("Posts API:", data)
+      
         setPosts(data.posts)
       })
       .catch((error) => {
@@ -91,7 +92,7 @@ function Home() {
     try {
       // EDIT POST
       if (editingPost) {
-        const response = await fetch(
+        const response = await authFetch(
           `http://localhost:5000/api/posts/${editingPost._id}`,
           {
             method: "PUT",
@@ -106,8 +107,6 @@ function Home() {
         )
 
         const data = await response.json()
-
-        console.log("Update Post API:", data)
 
         if (!response.ok) {
           setError(data.message || "Failed to update post")
@@ -127,7 +126,7 @@ function Home() {
       }
 
       // CREATE POST
-      const response = await fetch("http://localhost:5000/api/posts", {
+      const response = await authFetch("http://localhost:5000/api/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -140,7 +139,6 @@ function Home() {
 
       const data = await response.json()
 
-      console.log("Create Post API:", data)
 
       if (!response.ok) {
         setError(data.message || "Failed to create post")
@@ -173,7 +171,7 @@ function Home() {
     setError("")
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `http://localhost:5000/api/posts/${id}`,
         {
           method: "DELETE",
@@ -185,7 +183,6 @@ function Home() {
 
       const data = await response.json()
 
-      console.log("Delete Post API:", data)
 
       if (!response.ok) {
         setError(data.message || "Failed to delete post")

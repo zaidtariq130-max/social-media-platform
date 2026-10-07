@@ -41,8 +41,6 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
 
       const data = await response.json()
 
-      console.log("API Response:", data)
-
       if (!response.ok) {
         setErrorTitle(data.message || "Login failed")
         setErrorMessage(

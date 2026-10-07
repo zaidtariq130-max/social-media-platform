@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { colors, spacing, typography } from "../theme"
 import { MailIcon, UserIcon } from "../components/icons"
+import { authFetch } from "../utils/api"
 
 export default function Profile() {
   const [user, setUser] = useState({
@@ -20,7 +21,7 @@ export default function Profile() {
       return
     }
 
-    fetch("http://localhost:5000/api/auth/profile", {
+    authFetch("http://localhost:5000/api/auth/profile", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -34,8 +35,6 @@ export default function Profile() {
         return response.json()
       })
       .then((data) => {
-        console.log("Profile API:", data)
-
         setUser({
           username: data.user.username,
           email: data.user.email,

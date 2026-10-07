@@ -51,8 +51,6 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
 
       const data = await response.json()
 
-      console.log("Signup API Response:", data)
-
       if (!response.ok) {
         setError(data.message || "Signup failed")
         return
