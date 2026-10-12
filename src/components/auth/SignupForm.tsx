@@ -5,6 +5,7 @@ import Input from "../Input"
 import SocialButtons from "../SocialButtons"
 import { UserIcon, MailIcon, LockIcon } from "../icons"
 import { colors, typography } from "../../theme"
+import api, { setAccessToken } from "../../api/axios"
 
 interface SignupFormProps {
   setIsLoggedIn: (value: boolean) => void
@@ -34,33 +35,21 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
     setLoading(true)
 
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/auth/signup",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username: username,
-            email: email,
-            password: password,
-          }),
-        }
-      )
+      const response = await api.post("/auth/signup", {
+        username,
+        email,
+        password,
+      })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.message || "Signup failed")
-        return
-      }
-      localStorage.setItem("token", data.token)
+      setAccessToken(response.data.token)
       setIsLoggedIn(true)
       navigate("/welcome")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error)
-      setError("Unable to connect to the server")
+      setError(
+        error.response?.data?.message ||
+          (error.response ? "Signup failed" : "Unable to connect to the server")
+      )
     } finally {
       setLoading(false)
     }

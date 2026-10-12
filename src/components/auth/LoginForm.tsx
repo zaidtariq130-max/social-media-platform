@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Button from "../Button"
@@ -5,6 +6,7 @@ import Input from "../Input"
 import SocialButtons from "../SocialButtons"
 import { MailIcon, LockIcon } from "../icons"
 import { colors, typography } from "../../theme"
+import api, { setAccessToken } from "../../api/axios"
 
 interface LoginFormProps {
   setIsLoggedIn: (value: boolean) => void
@@ -13,7 +15,6 @@ interface LoginFormProps {
 export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-
   const [errorTitle, setErrorTitle] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
   const [loading, setLoading] = useState(false)
@@ -28,36 +29,31 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
     setLoading(true)
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+      const response = await api.post("/auth/login", {
+        email,
+        password,
       })
 
-      const data = await response.json()
+      const data = response.data
 
-      if (!response.ok) {
-        setErrorTitle(data.message || "Login failed")
-        setErrorMessage(
-          data.detail || "Something went wrong. Please try again."
-        )
-        return
-      }
-
-      localStorage.setItem("token", data.token)
+      setAccessToken(data.token)
 
       setIsLoggedIn(true)
       navigate("/welcome")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error)
 
-      setErrorTitle("Connection error")
-      setErrorMessage("Unable to connect to the server.")
+      setErrorTitle(
+        error.response?.data?.message ||
+          (error.response ? "Login failed" : "Connection error")
+      )
+
+      setErrorMessage(
+        error.response?.data?.detail ||
+          (error.response
+            ? "Something went wrong. Please try again."
+            : "Unable to connect to the server.")
+      )
     } finally {
       setLoading(false)
     }
@@ -129,7 +125,6 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
 
       {errorTitle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-
           <div
             className="relative w-full max-w-sm overflow-hidden rounded-2xl border p-6 shadow-2xl"
             style={{
@@ -138,8 +133,6 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
             }}
           >
             <div className="flex flex-col items-center text-center">
-
-              
               <div
                 className="mb-4 flex h-14 w-14 items-center justify-center rounded-full text-2xl"
                 style={{
@@ -164,7 +157,6 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
                 {errorMessage}
               </p>
 
-              {/* Close Button */}
               <button
                 type="button"
                 onClick={() => {
@@ -180,7 +172,6 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
                 Okay
               </button>
             </div>
-
 
             <div
               className="absolute bottom-0 left-0 h-1 w-full"

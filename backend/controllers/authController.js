@@ -2,6 +2,46 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
+const generateAccessToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
+    expiresIn: "15m"
+  });
+};
+
+const generateRefreshToken = (userId) => {
+  return jwt.sign({ id: userId }, process.env.JWT_REFRESH_SECRET, {
+    expiresIn: "7d"
+  });
+};
+
+const refreshCookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  path: "/api/auth",
+  maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+};
+
+const issueTokensAndRespond = async (res, user, statusCode, message) => {
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
+
+  user.refreshTokenHash = await bcrypt.hash(refreshToken, 10);
+  await user.save();
+
+  res.cookie("refreshToken", refreshToken, refreshCookieOptions);
+
+  return res.status(statusCode).json({
+    message,
+    token: accessToken,
+    user: {
+      id: user._id,
+      username: user.username,
+      email: user.email
+    }
+  });
+};
+
 const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -22,21 +62,12 @@ const signup = async (req, res) => {
       password: hashedPassword
     });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
+    return issueTokensAndRespond(
+      res,
+      user,
+      201,
+      "User registered successfully"
     );
-
-    return res.status(201).json({
-      message: "User registered successfully",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
-    });
 
   } catch (error) {
     return res.status(500).json({
@@ -79,21 +110,7 @@ const login = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
-
-    return res.status(200).json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email
-      }
-    });
+    return issueTokensAndRespond(res, user, 200, "Login successful");
 
   } catch (error) {
     return res.status(500).json({
@@ -130,8 +147,88 @@ const profile = async (req, res) => {
 };
 
 
+const refresh = async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+
+    if (!token) {
+      return res.status(401).json({
+        message: "No refresh token provided"
+      });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        message: "Invalid or expired refresh token"
+      });
+    }
+
+    const user = await User.findById(decoded.id);
+
+    if (!user || !user.refreshTokenHash) {
+      return res.status(401).json({
+        message: "Refresh token not recognized"
+      });
+    }
+
+    const isValid = await bcrypt.compare(token, user.refreshTokenHash);
+
+    if (!isValid) {
+      // Possible token reuse/theft: invalidate stored token
+      user.refreshTokenHash = null;
+      await user.save();
+
+      res.clearCookie("refreshToken", refreshCookieOptions);
+      return res.status(401).json({
+        message: "Refresh token not recognized"
+      });
+    }
+
+    // Rotate: issue a brand new access + refresh token pair
+    return issueTokensAndRespond(res, user, 200, "Token refreshed");
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
+
+
+const logout = async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
+        await User.findByIdAndUpdate(decoded.id, { refreshTokenHash: null });
+      } catch (err) {
+        // token already invalid/expired, nothing to clean up
+      }
+    }
+
+    res.clearCookie("refreshToken", refreshCookieOptions);
+
+    return res.status(200).json({
+      message: "Logged out successfully"
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server error"
+    });
+  }
+};
+
+
 module.exports = {
   signup,
   login,
-  profile
+  profile,
+  refresh,
+  logout
 };

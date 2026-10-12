@@ -1,10 +1,16 @@
+
 import { useEffect, useState } from "react"
 import { colors, spacing, typography } from "../theme"
 import { MailIcon, UserIcon } from "../components/icons"
-import { authFetch } from "../utils/api"
+import api from "../api/axios"
+
+interface User {
+  username: string
+  email: string
+}
 
 export default function Profile() {
-  const [user, setUser] = useState({
+  const [user, setUser] = useState<User>({
     username: "",
     email: "",
   })
@@ -13,28 +19,11 @@ export default function Profile() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      setError("No token found")
-      setLoading(false)
-      return
-    }
-
-    authFetch("http://localhost:5000/api/auth/profile", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    api
+      .get("/auth/profile")
       .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to load profile")
-        }
+        const data = response.data
 
-        return response.json()
-      })
-      .then((data) => {
         setUser({
           username: data.user.username,
           email: data.user.email,
@@ -42,7 +31,11 @@ export default function Profile() {
       })
       .catch((error) => {
         console.error("Profile error:", error)
-        setError("Unable to load profile")
+
+        setError(
+          error.response?.data?.message ||
+            "Unable to load profile"
+        )
       })
       .finally(() => {
         setLoading(false)
@@ -51,7 +44,6 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-
       <div
         className="rounded-3xl border shadow-xs overflow-hidden"
         style={{
@@ -79,7 +71,6 @@ export default function Profile() {
             paddingRight: spacing.lg,
           }}
         >
-          {/* Avatar */}
           <div className="-mt-14 sm:-mt-18 mb-4 relative inline-block">
             <img
               src="https://i.pravatar.cc/150?img=12"
@@ -102,9 +93,7 @@ export default function Profile() {
               Loading profile...
             </p>
           ) : error ? (
-            <p className="text-sm text-red-500">
-              {error}
-            </p>
+            <p className="text-sm text-red-500">{error}</p>
           ) : (
             <>
               <div className="space-y-1">

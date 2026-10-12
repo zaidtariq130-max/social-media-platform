@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { colors } from "../theme"
 import { BrandIcon, HomeIcon, LogoutIcon, UserIcon } from "./icons"
+import api, { clearAccessToken } from "../api/axios"
 
 interface NavbarProps {
   isLoggedIn: boolean
@@ -14,10 +15,16 @@ export default function Navbar({
   const navigate = useNavigate()
   const location = useLocation()
 
-  function handleLogout() {
-    setIsLoggedIn(false)
-    localStorage.removeItem("token")
-    navigate("/login")
+  async function handleLogout() {
+    try {
+      await api.post("/auth/logout")
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setIsLoggedIn(false)
+      clearAccessToken()
+      navigate("/login")
+    }
   }
 
   const isActive = (path: string) => location.pathname === path
@@ -112,4 +119,3 @@ export default function Navbar({
     </header>
   )
 }
-

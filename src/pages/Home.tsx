@@ -1,9 +1,12 @@
+
 import { useState, useEffect, useRef } from "react"
+
 import PostCard from "../components/PostCard"
 import Button from "../components/Button"
 import type { Post } from "../types"
 import { colors, spacing, typography } from "../theme"
-import { authFetch } from "../utils/api"
+import api from "../api/axios"
+
 import {
   ChatIcon,
   CheckIcon,
@@ -16,73 +19,42 @@ function Home() {
 
   const [posts, setPosts] = useState<Post[]>([])
   const [editingPost, setEditingPost] = useState<Post | null>(null)
-  const [postContent, setpostContent] = useState("")
+  const [postContent, setPostContent] = useState("")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [creating, setCreating] = useState(false)
   const [username, setUsername] = useState("")
 
+  // GET PROFILE AND POSTS
   useEffect(() => {
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      setError("No token found")
-      setLoading(false)
-      return
-    }
-
-    // GET PROFILE
-    authFetch("http://localhost:5000/api/auth/profile", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        
-        setUsername(data.user.username)
+    api
+      .get("/auth/profile")
+      .then((response) => {
+        setUsername(response.data.user.username)
       })
       .catch((error) => {
         console.error("Profile error:", error)
       })
 
-    // GET POSTS
-    authFetch("http://localhost:5000/api/posts", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    api
+      .get("/posts")
       .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch posts")
-        }
-
-        return response.json()
-      })
-      .then((data) => {
-      
-        setPosts(data.posts)
+        setPosts(response.data.posts)
       })
       .catch((error) => {
         console.error("Get posts error:", error)
-        setError("Unable to load posts")
+        setError(
+          error.response?.data?.message || "Unable to load posts"
+        )
       })
       .finally(() => {
         setLoading(false)
       })
   }, [])
 
+  // CREATE OR UPDATE POST
   async function handleCreatePost() {
-    if (postContent.trim() === "") {
-      return
-    }
-
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      setError("No token found")
+    if (!postContent.trim()) {
       return
     }
 
@@ -90,70 +62,42 @@ function Home() {
     setError("")
 
     try {
-      // EDIT POST
       if (editingPost) {
-        const response = await authFetch(
-          `http://localhost:5000/api/posts/${editingPost._id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              content: postContent,
-            }),
-          }
+        const response = await api.put(
+          `/posts/${editingPost._id}`,
+          { content: postContent }
         )
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          setError(data.message || "Failed to update post")
-          return
-        }
+        const updatedPost = response.data.post
 
         setPosts((previousPosts) =>
           previousPosts.map((post) =>
-            post._id === editingPost._id ? data.post : post
+            post._id === editingPost._id ? updatedPost : post
           )
         )
 
         setEditingPost(null)
-        setpostContent("")
-
+        setPostContent("")
         return
       }
 
-      // CREATE POST
-      const response = await authFetch("http://localhost:5000/api/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          content: postContent,
-        }),
+      const response = await api.post("/posts", {
+        content: postContent,
       })
 
-      const data = await response.json()
-
-
-      if (!response.ok) {
-        setError(data.message || "Failed to create post")
-        return
-      }
-
       setPosts((previousPosts) => [
-        data.post,
+        response.data.post,
         ...previousPosts,
       ])
 
-      setpostContent("")
-    } catch (error) {
+      setPostContent("")
+    } catch (error: any) {
       console.error("Post error:", error)
-      setError("Unable to connect to the server")
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to connect to the server"
+      )
     } finally {
       setCreating(false)
     }
@@ -161,46 +105,28 @@ function Home() {
 
   // DELETE POST
   async function handleDeletePost(id: string) {
-    const token = localStorage.getItem("token")
-
-    if (!token) {
-      setError("No token found")
-      return
-    }
-
     setError("")
 
     try {
-      const response = await authFetch(
-        `http://localhost:5000/api/posts/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      )
-
-      const data = await response.json()
-
-
-      if (!response.ok) {
-        setError(data.message || "Failed to delete post")
-        return
-      }
+      await api.delete(`/posts/${id}`)
 
       setPosts((previousPosts) =>
         previousPosts.filter((post) => post._id !== id)
       )
-    } catch (error) {
+    } catch (error: any) {
       console.error("Delete post error:", error)
-      setError("Unable to connect to the server")
+
+      setError(
+        error.response?.data?.message ||
+          "Unable to delete post"
+      )
     }
   }
 
+  // EDIT POST
   function handleEditPost(post: Post) {
     setEditingPost(post)
-    setpostContent(post.content)
+    setPostContent(post.content)
 
     window.scrollTo({
       top: 0,
@@ -212,9 +138,10 @@ function Home() {
     }, 100)
   }
 
+  // CANCEL EDIT
   function handleCancelEdit() {
     setEditingPost(null)
-    setpostContent("")
+    setPostContent("")
   }
 
   return (
@@ -255,7 +182,6 @@ function Home() {
               className="w-2 h-2 rounded-full animate-pulse"
               style={{ backgroundColor: colors.primary }}
             />
-
             {posts.length} {posts.length === 1 ? "Post" : "Posts"}
           </span>
         </div>
@@ -298,7 +224,7 @@ function Home() {
             <textarea
               ref={textareaRef}
               value={postContent}
-              onChange={(e) => setpostContent(e.target.value)}
+              onChange={(event) => setPostContent(event.target.value)}
               placeholder="What's happening? Share your thoughts..."
               rows={3}
               className="w-full p-3 sm:p-4 text-slate-800 placeholder-slate-400 bg-slate-50/70 border rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all text-sm sm:text-base resize-none"
@@ -412,10 +338,10 @@ function Home() {
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {posts.map((p) => (
+            {posts.map((post) => (
               <PostCard
-                key={p._id}
-                post={p}
+                key={post._id}
+                post={post}
                 onDelete={handleDeletePost}
                 onEdit={handleEditPost}
               />
