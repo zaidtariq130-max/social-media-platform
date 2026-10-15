@@ -37,6 +37,9 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
       const data = response.data
 
       setAccessToken(data.token)
+      if (data.user) {
+        localStorage.setItem("current_user", JSON.stringify(data.user))
+      }
 
       setIsLoggedIn(true)
       navigate("/welcome")

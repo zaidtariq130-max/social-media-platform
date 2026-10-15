@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Profile from "./pages/Profile"
+import Messages from "./pages/Messages"
 import { useEffect, useState } from "react"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import ProtectedLayout from "./routes/ProtectedLayout"
@@ -52,6 +53,7 @@ function App() {
             }
           >
             <Route path="/" element={<Home />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 

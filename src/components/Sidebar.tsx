@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 import { Link, useLocation } from "react-router-dom"
-import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,} from "./icons"
+import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,ChatIcon} from "./icons"
 import { colors, layout } from "../theme"
 import { APP_NAME } from "../config/app"
 
@@ -18,6 +18,7 @@ const themeVars = {
 
 const navLinks = [
   { to: "/", label: "Home", Icon: HomeIcon },
+  { to: "/messages", label: "Messages", Icon: ChatIcon },
   { to: "/profile", label: "Profile", Icon: UserIcon },
 ]
 

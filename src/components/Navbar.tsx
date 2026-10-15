@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { colors } from "../theme"
-import { BrandIcon, HomeIcon, LogoutIcon, UserIcon } from "./icons"
+import { BrandIcon, HomeIcon, LogoutIcon, UserIcon, ChatIcon } from "./icons"
 import api, { clearAccessToken } from "../api/axios"
 
 interface NavbarProps {
@@ -70,6 +70,24 @@ export default function Navbar({
           >
             <HomeIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
             <span>Home</span>
+          </Link>
+
+          <Link
+            to="/messages"
+            className="px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-2 hover:bg-slate-100 group"
+            style={
+              isActive("/messages")
+                ? {
+                    backgroundColor: colors.activeBackground,
+                    color: colors.iconActive,
+                  }
+                : {
+                    color: colors.iconInactive,
+                  }
+            }
+          >
+            <ChatIcon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            <span>Messages</span>
           </Link>
 
           <Link

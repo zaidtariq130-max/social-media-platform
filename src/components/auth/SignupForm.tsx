@@ -42,6 +42,9 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
       })
 
       setAccessToken(response.data.token)
+      if (response.data.user) {
+        localStorage.setItem("current_user", JSON.stringify(response.data.user))
+      }
       setIsLoggedIn(true)
       navigate("/welcome")
     } catch (error: any) {

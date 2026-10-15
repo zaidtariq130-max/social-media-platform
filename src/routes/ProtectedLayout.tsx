@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 import Header from "../components/Header"
 import { colors, typography, layout } from "../theme"
+import { connectSocket, disconnectSocket } from "../socket/socket"
 
 interface ProtectedLayoutProps {
   isLoggedIn: boolean
@@ -16,6 +17,12 @@ export default function ProtectedLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(
     () => window.innerWidth >= layout.breakpoint
   )
+
+  // One real-time connection for the whole logged-in area (presence + live messages everywhere)
+  useEffect(() => {
+    connectSocket()
+    return () => disconnectSocket()
+  }, [])
 
   useEffect(() => {
     const mq = window.matchMedia(`(min-width: ${layout.breakpoint}px)`)
