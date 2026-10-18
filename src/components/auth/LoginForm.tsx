@@ -1,12 +1,14 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import Button from "../Button"
-import Input from "../Input"
+import Button from "../common/Button"
+import Input from "../common/Input"
 import SocialButtons from "../SocialButtons"
 import { MailIcon, LockIcon } from "../icons"
 import { colors, typography } from "../../theme"
 import api, { setAccessToken } from "../../api/axios"
+import { parseApiError } from "../../utils/errors"
+import { setStoredUser } from "../../utils/currentUser"
 
 interface LoginFormProps {
   setIsLoggedIn: (value: boolean) => void
@@ -37,23 +39,18 @@ export default function LoginForm({ setIsLoggedIn }: LoginFormProps) {
       const data = response.data
 
       setAccessToken(data.token)
-      if (data.user) {
-        localStorage.setItem("current_user", JSON.stringify(data.user))
-      }
+      if (data.user) setStoredUser(data.user)
 
       setIsLoggedIn(true)
       navigate("/welcome")
-    } catch (error: any) {
-      console.error("Login error:", error)
+    } catch (error) {
+      const { hasResponse, message, detail } = parseApiError(error)
 
-      setErrorTitle(
-        error.response?.data?.message ||
-          (error.response ? "Login failed" : "Connection error")
-      )
+      setErrorTitle(message || (hasResponse ? "Login failed" : "Connection error"))
 
       setErrorMessage(
-        error.response?.data?.detail ||
-          (error.response
+        detail ||
+          (hasResponse
             ? "Something went wrong. Please try again."
             : "Unable to connect to the server.")
       )

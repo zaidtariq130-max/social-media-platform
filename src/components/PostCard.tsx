@@ -1,5 +1,5 @@
 import type { Post } from "../types"
-import Button from "../components/Button"
+import Button from "./common/Button"
 import { colors, spacing, typography } from "../theme"
 import { ClockIcon, EditIcon, TrashIcon } from "./icons"
 

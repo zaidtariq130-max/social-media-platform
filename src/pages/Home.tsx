@@ -2,10 +2,11 @@
 import { useState, useEffect, useRef } from "react"
 
 import PostCard from "../components/PostCard"
-import Button from "../components/Button"
+import Button from "../components/common/Button"
 import type { Post } from "../types"
 import { colors, spacing, typography } from "../theme"
 import api from "../api/axios"
+import { getErrorMessage } from "../utils/errors"
 
 import {
   ChatIcon,
@@ -32,8 +33,8 @@ function Home() {
       .then((response) => {
         setUsername(response.data.user.username)
       })
-      .catch((error) => {
-        console.error("Profile error:", error)
+      .catch(() => {
+        // the greeting just stays empty; the posts request below shows its own error
       })
 
     api
@@ -41,11 +42,8 @@ function Home() {
       .then((response) => {
         setPosts(response.data.posts)
       })
-      .catch((error) => {
-        console.error("Get posts error:", error)
-        setError(
-          error.response?.data?.message || "Unable to load posts"
-        )
+      .catch((error: unknown) => {
+        setError(getErrorMessage(error, "Unable to load posts"))
       })
       .finally(() => {
         setLoading(false)
@@ -91,13 +89,8 @@ function Home() {
       ])
 
       setPostContent("")
-    } catch (error: any) {
-      console.error("Post error:", error)
-
-      setError(
-        error.response?.data?.message ||
-          "Unable to connect to the server"
-      )
+    } catch (error) {
+      setError(getErrorMessage(error, "Unable to connect to the server"))
     } finally {
       setCreating(false)
     }
@@ -113,13 +106,8 @@ function Home() {
       setPosts((previousPosts) =>
         previousPosts.filter((post) => post._id !== id)
       )
-    } catch (error: any) {
-      console.error("Delete post error:", error)
-
-      setError(
-        error.response?.data?.message ||
-          "Unable to delete post"
-      )
+    } catch (error) {
+      setError(getErrorMessage(error, "Unable to delete post"))
     }
   }
 

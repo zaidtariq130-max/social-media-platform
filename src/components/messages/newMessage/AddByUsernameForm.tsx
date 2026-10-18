@@ -1,34 +1,34 @@
 import { useState, type FormEvent } from "react"
 import type { MessageUser } from "../../../types/messages"
 import { colors } from "../../../theme"
+import { fetchUserByUsername } from "../../../services/userService"
+import { getErrorMessage } from "../../../utils/errors"
 
 interface Props {
   onSubmit: (user: MessageUser) => void
   onCancel: () => void
 }
 
-/**
- * NOTE: this builds a placeholder user with a fake id. The backend needs a real user id,
- * so this flow must be replaced with a username lookup endpoint (planned in a later step).
- */
+/** Looks the username up on the server, so the chat is always started with a real user id. */
 export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
   const [username, setUsername] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     const clean = username.trim().replace(/^@/, "")
-    if (!clean) return
+    if (!clean || loading) return
 
-    onSubmit({
-      id: `user_${Date.now()}`,
-      name: `@${clean}`,
-      username: clean,
-      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80",
-      bio: `SocialApp member @${clean}`,
-      isOnline: true,
-      followersCount: 1,
-      postsCount: 0,
-    })
+    setLoading(true)
+    setError("")
+    try {
+      onSubmit(await fetchUserByUsername(clean))
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not look that username up. Please try again."))
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -43,7 +43,10 @@ export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
             id="new-chat-username"
             type="text"
             value={username}
-            onChange={(e) => setUsername(e.target.value.replace(/^@/, ""))}
+            onChange={(e) => {
+              setUsername(e.target.value.replace(/^@/, ""))
+              setError("")
+            }}
             placeholder="Enter username (e.g. johndoe)"
             className="w-full pl-8 pr-3 py-2.5 text-xs sm:text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition"
             required
@@ -53,6 +56,11 @@ export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
         <p className="text-[11px] text-slate-500 mt-1.5">
           Enter the user's handle to send a direct message request. Once they accept, you can chat with them.
         </p>
+        {error && (
+          <p role="alert" className="text-[11px] text-rose-600 mt-1.5">
+            {error}
+          </p>
+        )}
       </div>
 
       <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">
@@ -65,11 +73,11 @@ export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
         </button>
         <button
           type="submit"
-          disabled={!username.trim()}
+          disabled={!username.trim() || loading}
           className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 shadow-sm transition"
           style={{ backgroundColor: colors.primary }}
         >
-          Send Request
+          {loading ? "Searching..." : "Send Request"}
         </button>
       </div>
     </form>

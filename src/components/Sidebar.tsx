@@ -3,6 +3,8 @@ import { Link, useLocation } from "react-router-dom"
 import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,ChatIcon} from "./icons"
 import { colors, layout } from "../theme"
 import { APP_NAME } from "../config/app"
+import api, { clearAccessToken } from "../api/axios"
+import { clearStoredUser } from "../utils/currentUser"
 
 interface SidebarProps {
   isOpen: boolean
@@ -30,9 +32,16 @@ export default function Sidebar({
 }: SidebarProps) {
   const location = useLocation()
 
-  function handleLogout() {
-    setIsLoggedIn(false)
-    localStorage.removeItem("token")
+  async function handleLogout() {
+    try {
+      await api.post("/auth/logout")
+    } catch {
+      // even if the server can't be reached, log out locally
+    } finally {
+      clearAccessToken()
+      clearStoredUser()
+      setIsLoggedIn(false)
+    }
   }
 
   function closeOnMobile() {
@@ -171,6 +180,4 @@ export default function Sidebar({
     </>
   )
 }
-
-
 

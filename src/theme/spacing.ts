@@ -2,7 +2,6 @@ import type { ThemeSpacing } from "./types"
 
 export const spacing: ThemeSpacing = {
 
-
   xs: "4px",
   sm: "8px",
   md: "16px",

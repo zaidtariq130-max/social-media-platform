@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import { colors, spacing, typography } from "../theme"
 import { MailIcon, UserIcon } from "../components/icons"
 import api from "../api/axios"
+import { getErrorMessage } from "../utils/errors"
+import { avatarFor } from "../utils/avatar"
 
 interface User {
   username: string
@@ -29,13 +31,8 @@ export default function Profile() {
           email: data.user.email,
         })
       })
-      .catch((error) => {
-        console.error("Profile error:", error)
-
-        setError(
-          error.response?.data?.message ||
-            "Unable to load profile"
-        )
+      .catch((error: unknown) => {
+        setError(getErrorMessage(error, "Unable to load profile"))
       })
       .finally(() => {
         setLoading(false)
@@ -73,7 +70,7 @@ export default function Profile() {
         >
           <div className="-mt-14 sm:-mt-18 mb-4 relative inline-block">
             <img
-              src="https://i.pravatar.cc/150?img=12"
+              src={avatarFor(user.username)}
               alt="Profile"
               width="150"
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-md object-cover bg-white"

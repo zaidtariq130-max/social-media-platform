@@ -3,7 +3,7 @@ export interface Post {
   user: {
     _id: string
     username: string
-    email: string
+    email?: string
   }
   content: string
   createdAt: string

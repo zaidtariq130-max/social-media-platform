@@ -15,7 +15,6 @@ export const colors: ThemeColors = {
   outlineBackground: "#ffffff",
   ghostBackground: "#f1f5f9",
 
-
   iconActive: "#2563eb",
   iconInactive: "#64748b",
   iconHover: "#0f172a",

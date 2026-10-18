@@ -22,8 +22,15 @@ function App() {
   }, [])
 
   if (isCheckingAuth) {
-    
-    return null
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        role="status"
+        aria-label="Loading"
+      >
+        <div className="w-8 h-8 rounded-full border-2 border-slate-200 border-t-slate-500 animate-spin" />
+      </div>
+    )
   }
 
   return (

@@ -13,7 +13,6 @@ export interface ThemeColors {
   outlineBackground: string
   ghostBackground: string
 
-
   iconActive: string
   iconInactive: string
   iconHover: string

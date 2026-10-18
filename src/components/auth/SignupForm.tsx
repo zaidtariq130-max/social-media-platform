@@ -1,10 +1,12 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import Button from "../Button"
-import Input from "../Input"
+import Button from "../common/Button"
+import Input from "../common/Input"
 import SocialButtons from "../SocialButtons"
 import { UserIcon, MailIcon, LockIcon } from "../icons"
 import { colors, typography } from "../../theme"
+import { parseApiError } from "../../utils/errors"
+import { setStoredUser } from "../../utils/currentUser"
 import api, { setAccessToken } from "../../api/axios"
 
 interface SignupFormProps {
@@ -42,17 +44,12 @@ export default function SignupForm({ setIsLoggedIn }: SignupFormProps) {
       })
 
       setAccessToken(response.data.token)
-      if (response.data.user) {
-        localStorage.setItem("current_user", JSON.stringify(response.data.user))
-      }
+      if (response.data.user) setStoredUser(response.data.user)
       setIsLoggedIn(true)
       navigate("/welcome")
-    } catch (error: any) {
-      console.error("Signup error:", error)
-      setError(
-        error.response?.data?.message ||
-          (error.response ? "Signup failed" : "Unable to connect to the server")
-      )
+    } catch (error) {
+      const { hasResponse, message } = parseApiError(error)
+      setError(message || (hasResponse ? "Signup failed" : "Unable to connect to the server"))
     } finally {
       setLoading(false)
     }

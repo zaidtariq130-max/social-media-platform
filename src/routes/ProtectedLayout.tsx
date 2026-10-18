@@ -48,7 +48,7 @@ export default function ProtectedLayout({
           setIsLoggedIn={setIsLoggedIn}
         />
 
-        <div className="min-w-0 flex flex-col">  
+        <div className="min-w-0 flex flex-col">
           <Header />
 
           <main className={`flex-1 ${layout.contentPadding}`}>

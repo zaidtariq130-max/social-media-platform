@@ -8,34 +8,21 @@ import ChatInfoDrawer from "../components/messages/ChatInfoDrawer"
 import api from "../api/axios"
 import { useConversations } from "../hooks/useConversations"
 import { mapConversation } from "../services/conversationService"
-import { TrashIcon } from "../components/icons"
-
-interface DeleteConfirmState {
-  title: string
-  description: string
-  confirmText?: string
-  cancelText?: string
-  onConfirm: () => void
-}
-
-interface MessageDeleteTarget {
-  conversationId: string
-  messageId: string
-  isMyMessage: boolean
-}
+import Toast from "../components/messages/Toast"
+import ConfirmDialog, { type ConfirmDialogState } from "../components/messages/ConfirmDialog"
+import MessageDeleteDialog, {
+  type MessageDeleteTarget,
+} from "../components/messages/MessageDeleteDialog"
+import { useToast } from "../hooks/useToast"
+import { getStoredUser } from "../utils/currentUser"
+import { getErrorMessage } from "../utils/errors"
 
 export default function Messages() {
   const [activeFolder, setActiveFolder] = useState<FolderType>("primary")
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null)
   // User chosen from "New message" but no message sent yet (chat is created on first send)
   const [draftUser, setDraftUser] = useState<MessageUser | null>(null)
-  const [currentUserId, setCurrentUserId] = useState<string>(() => {
-    try {
-      const u = localStorage.getItem("current_user")
-      if (u) return JSON.parse(u).id || ""
-    } catch {}
-    return ""
-  })
+  const [currentUserId, setCurrentUserId] = useState<string>(() => getStoredUser()?.id || "")
 
   // Conversation list: loaded once over REST, then kept live by Socket.io
   const { conversations, setConversations, isLoaded, isTypingIn, sendMessage, emitTyping } =
@@ -61,15 +48,11 @@ export default function Messages() {
 
   const [isNewMessageModalOpen, setIsNewMessageModalOpen] = useState(false)
   const [isInfoDrawerOpen, setIsInfoDrawerOpen] = useState(false)
-  const [currentUsername, setCurrentUsername] = useState<string>(() => {
-    try {
-      const u = localStorage.getItem("current_user")
-      if (u) return JSON.parse(u).username || "you"
-    } catch {}
-    return "you"
-  })
-  const [toastMessage, setToastMessage] = useState<string | null>(null)
-  const [deleteConfirm, setDeleteConfirm] = useState<DeleteConfirmState | null>(null)
+  const [currentUsername, setCurrentUsername] = useState<string>(
+    () => getStoredUser()?.username || "you"
+  )
+  const { toastMessage, showToast, hideToast } = useToast()
+  const [deleteConfirm, setDeleteConfirm] = useState<ConfirmDialogState | null>(null)
   const [messageDeleteTarget, setMessageDeleteTarget] = useState<MessageDeleteTarget | null>(null)
 
   // Mobile navigation: whether chat view is open instead of list view
@@ -105,11 +88,9 @@ export default function Messages() {
       })
   }, [])
 
-  function showToast(msg: string) {
-    setToastMessage(msg)
-    setTimeout(() => {
-      setToastMessage(null)
-    }, 1800)
+  /** Fire-and-forget save to the server. The UI is already updated, so just warn if it failed. */
+  function persist(request: Promise<unknown>) {
+    request.catch(() => showToast("Couldn't save that change. Please check your connection."))
   }
 
   // Active conversation object
@@ -212,8 +193,6 @@ export default function Messages() {
     }
   }
 
-
-
   // Send quick heart
   function handleSendHeart() {
     handleSendMessage("❤️")
@@ -238,7 +217,7 @@ export default function Messages() {
     showToast("Message request accepted! Moved to Primary inbox.")
 
     // Persist to backend
-    api.put(`/conversations/${conversationId}/accept`).catch(() => {})
+    persist(api.put(`/conversations/${conversationId}/accept`))
   }
 
   // Decline / Delete Instagram Message Request
@@ -261,33 +240,26 @@ export default function Messages() {
         showToast("Message request deleted.")
 
         // Persist so it doesn't come back on refresh
-        api.delete(`/conversations/${conversationId}`).catch(() => {})
+        persist(api.delete(`/conversations/${conversationId}`))
       },
     })
   }
 
   // Block / Unblock User
   function handleToggleBlockUser(conversationId: string) {
+    const target = conversations.find((c) => c.id === conversationId)
+    if (!target) return
+    const nextState = !target.isBlocked
+
     setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === conversationId) {
-          const nextState = !conv.isBlocked
-          showToast(
-            nextState
-              ? `Blocked @${conv.participant.username}`
-              : `Unblocked @${conv.participant.username}`
-          )
-          return {
-            ...conv,
-            isBlocked: nextState,
-          }
-        }
-        return conv
-      })
+      prev.map((conv) => (conv.id === conversationId ? { ...conv, isBlocked: nextState } : conv))
+    )
+    showToast(
+      nextState ? `Blocked @${target.participant.username}` : `Unblocked @${target.participant.username}`
     )
 
     // Persist block state to database
-    api.put(`/conversations/${conversationId}/block`).catch(() => {})
+    persist(api.put(`/conversations/${conversationId}/block`))
   }
 
   // Remove contact permanently from list
@@ -297,7 +269,7 @@ export default function Messages() {
 
     setDeleteConfirm({
       title: "Remove Contact Permanently?",
-      description: `This will completely remove @${username} from your contacts list. If you want to chat again later, you will need to send a new message request.`,
+      description: `This permanently deletes your whole chat with @${username} for BOTH of you, and removes the contact. Use "Clear Chat" instead if you only want to hide the messages for yourself. To talk again later you will need to send a new message request.`,
       confirmText: "Yes, Remove Contact",
       cancelText: "No, Cancel",
       onConfirm: () => {
@@ -310,7 +282,7 @@ export default function Messages() {
         showToast(`@${username} removed from contacts.`)
 
         // Persist permanent removal to backend
-        api.delete(`/conversations/${conversationId}`).catch(() => {})
+        persist(api.delete(`/conversations/${conversationId}`))
       },
     })
   }
@@ -356,28 +328,21 @@ export default function Messages() {
         setDeleteConfirm(null)
         showToast("Chat cleared. Use New Message to chat again.")
 
-        api.put(`/conversations/${conversationId}/clear`).catch(() => {})
+        persist(api.put(`/conversations/${conversationId}/clear`))
       },
     })
   }
 
   // Toggle Mute
   function handleToggleMute(conversationId: string) {
+    const target = conversations.find((c) => c.id === conversationId)
+    if (!target) return
+    const nextState = !target.isMuted
+
     setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === conversationId) {
-          const nextState = !conv.isMuted
-          showToast(
-            nextState ? "Notifications muted" : "Notifications unmuted"
-          )
-          return {
-            ...conv,
-            isMuted: nextState,
-          }
-        }
-        return conv
-      })
+      prev.map((conv) => (conv.id === conversationId ? { ...conv, isMuted: nextState } : conv))
     )
+    showToast(nextState ? "Notifications muted" : "Notifications unmuted")
   }
 
   // Delete Single Message: Opens WhatsApp-style choice modal
@@ -423,9 +388,7 @@ export default function Messages() {
 
     // Persist to backend
     if (!messageId.startsWith("msg_")) {
-      api
-        .delete(`/conversations/${conversationId}/messages/${messageId}`)
-        .catch(() => {})
+      persist(api.delete(`/conversations/${conversationId}/messages/${messageId}`))
     }
   }
 
@@ -454,9 +417,7 @@ export default function Messages() {
 
     // Persist Delete for Me to backend so polling never restores it
     if (!messageId.startsWith("msg_")) {
-      api
-        .put(`/conversations/${conversationId}/messages/${messageId}/delete-for-me`)
-        .catch(() => {})
+      persist(api.put(`/conversations/${conversationId}/messages/${messageId}/delete-for-me`))
     }
   }
 
@@ -538,35 +499,14 @@ export default function Messages() {
         setIsMobileChatOpen(true)
         showToast(`Group "${conv.groupName}" created!`)
       }
-    } catch (err: any) {
-      showToast(err.response?.data?.message || "Failed to create group.")
+    } catch (err) {
+      showToast(getErrorMessage(err, "Failed to create group."))
     }
   }
 
   return (
     <div className="max-w-6xl mx-auto h-[calc(100dvh-5.5rem)] sm:h-[calc(100dvh-6.5rem)] lg:h-[calc(100dvh-8rem)] w-full flex flex-col relative">
-      {/* Toast Alert: bottom-right corner of chat (Instantly disappears on mouse hover or click) */}
-      {toastMessage && (
-        <div
-          onMouseEnter={() => setToastMessage(null)}
-          onClick={() => setToastMessage(null)}
-          className="fixed sm:absolute bottom-5 right-5 z-50 bg-slate-900/95 hover:bg-slate-800 text-white px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-medium shadow-2xl backdrop-blur-xs animate-in fade-in slide-in-from-bottom-2 duration-150 border border-slate-700/80 flex items-center gap-2.5 cursor-pointer select-none transition-all hover:scale-95 hover:opacity-0"
-          title="Hover or click to dismiss immediately"
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
-          <span>{toastMessage}</span>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation()
-              setToastMessage(null)
-            }}
-            className="ml-1 text-slate-400 hover:text-white text-xs px-1 rounded cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <Toast message={toastMessage} onDismiss={hideToast} />
 
       {/* Main Messages Frame Container */}
       <div className="flex-1 min-h-0 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-[320px_1fr] lg:grid-cols-[360px_1fr]">
@@ -641,101 +581,14 @@ export default function Messages() {
         onClearMessages={handleClearMessages}
       />
 
-      {/* Delete Confirmation Modal (Yes / No) */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 text-center space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600 mx-auto flex items-center justify-center">
-              <TrashIcon className="w-6 h-6" />
-            </div>
+      <ConfirmDialog dialog={deleteConfirm} onClose={() => setDeleteConfirm(null)} />
 
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-base text-slate-900">
-                {deleteConfirm.title}
-              </h3>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                {deleteConfirm.description}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirm(null)}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
-              >
-                No
-              </button>
-
-              <button
-                type="button"
-                onClick={deleteConfirm.onConfirm}
-                className="flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition cursor-pointer shadow-sm shadow-rose-600/20"
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* WhatsApp-style Single Message Delete Choice Modal */}
-      {messageDeleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-sm rounded-3xl bg-white border border-slate-200 shadow-2xl p-6 text-center space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="w-12 h-12 rounded-full bg-rose-50 border border-rose-100 text-rose-600 mx-auto flex items-center justify-center">
-              <TrashIcon className="w-6 h-6" />
-            </div>
-
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-base text-slate-900">
-                Delete Message?
-              </h3>
-              <p className="text-xs text-slate-500">
-                Choose how you want to delete this message.
-              </p>
-            </div>
-
-            <div className="space-y-2 pt-2">
-              {messageDeleteTarget.isMyMessage && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleConfirmDeleteForEveryone(
-                      messageDeleteTarget.conversationId,
-                      messageDeleteTarget.messageId
-                    )
-                  }
-                  className="w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
-                >
-                  Delete for Everyone
-                </button>
-              )}
-
-              <button
-                type="button"
-                onClick={() =>
-                  handleConfirmDeleteForMe(
-                    messageDeleteTarget.conversationId,
-                    messageDeleteTarget.messageId
-                  )
-                }
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition cursor-pointer"
-              >
-                Delete for Me
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setMessageDeleteTarget(null)}
-                className="w-full py-2 px-4 rounded-xl text-slate-500 hover:text-slate-800 text-xs font-medium transition cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <MessageDeleteDialog
+        target={messageDeleteTarget}
+        onDeleteForEveryone={handleConfirmDeleteForEveryone}
+        onDeleteForMe={handleConfirmDeleteForMe}
+        onClose={() => setMessageDeleteTarget(null)}
+      />
     </div>
   )
 }

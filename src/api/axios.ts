@@ -1,8 +1,9 @@
 
 import axios from "axios"
+import { API_BASE_URL } from "../config/app"
 
 const api = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,8 +12,10 @@ const api = axios.create({
 })
 
 
+const AUTH_ENDPOINTS = ["/auth/login", "/auth/signup", "/auth/refresh"]
+
 const refreshClient = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: API_BASE_URL,
   withCredentials: true,
 })
 
@@ -78,9 +81,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config
 
+    // A 401 from login/signup/refresh means "wrong credentials", not "token expired":
+    // don't try to refresh, just hand the error to the form so it can show it.
+    const isAuthRequest = AUTH_ENDPOINTS.some((path) => originalRequest?.url?.startsWith(path))
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
-      if (error.response?.status === 401) {
+    if (error.response?.status !== 401 || !originalRequest || originalRequest._retry || isAuthRequest) {
+      if (error.response?.status === 401 && !isAuthRequest) {
         redirectToLogin()
       }
       return Promise.reject(error)
