@@ -44,6 +44,21 @@ module.exports = Object.freeze({
     sameSite: process.env.COOKIE_SAME_SITE || "lax",
   },
 
+  // Chatbot (Google Gemini). Optional: without GEMINI_API_KEY the rest of the app works
+  // normally and only POST /api/chatbot answers 503.
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || "",
+    model: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+    // Used only when the main model keeps failing with temporary errors (503 high demand).
+    // Set GEMINI_FALLBACK_MODEL= (empty) to turn the fallback off.
+    fallbackModel: (process.env.GEMINI_FALLBACK_MODEL ?? "gemini-3.1-flash-lite").trim(),
+    // minimal | low | medium | high. Empty = let the model decide. "low" keeps support answers fast.
+    thinkingLevel: (process.env.GEMINI_THINKING_LEVEL ?? "low").trim().toLowerCase(),
+    timeoutMs: toInt(process.env.GEMINI_TIMEOUT_MS, 20 * 1000),
+    // chatbot requests per user per minute
+    rateLimitMax: toInt(process.env.RATE_LIMIT_CHATBOT_MAX, 15),
+  },
+
   rateLimit: {
     windowMs: toInt(process.env.RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
     authMax: toInt(process.env.RATE_LIMIT_AUTH_MAX, 20),

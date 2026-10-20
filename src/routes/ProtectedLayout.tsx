@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Outlet } from "react-router-dom"
 import Sidebar from "../components/Sidebar"
 import Header from "../components/Header"
+import ChatbotWidget from "../components/chatbot/ChatbotWidget"
 import { colors, typography, layout } from "../theme"
 import { connectSocket, disconnectSocket } from "../socket/socket"
 
@@ -56,6 +57,8 @@ export default function ProtectedLayout({
           </main>
         </div>
       </div>
+
+      <ChatbotWidget />
     </div>
   )
 }
