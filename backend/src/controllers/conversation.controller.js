@@ -22,11 +22,6 @@ const createGroupConversation = async (req, res) => {
   return sendSuccess(res, { conversation }, 201);
 };
 
-const acceptConversation = async (req, res) => {
-  await conversationService.acceptConversation(req.user.id, req.params.id);
-  return sendSuccess(res, { message: "Request accepted" });
-};
-
 const deleteConversation = async (req, res) => {
   await conversationService.deleteConversation(req.user.id, req.params.id);
   return sendSuccess(res, { message: "Conversation deleted" });
@@ -76,7 +71,6 @@ module.exports = {
   getConversations,
   createConversation,
   createGroupConversation,
-  acceptConversation,
   deleteConversation,
   clearMessages,
   toggleBlockConversation,

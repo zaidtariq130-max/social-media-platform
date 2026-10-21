@@ -1,6 +1,8 @@
 const User = require("../models/User");
+const Post = require("../models/Post");
+const Friendship = require("../models/Friendship");
 const AppError = require("../utils/AppError");
-const { USER_HIDDEN_FIELDS } = require("../config/constants");
+const { USER_HIDDEN_FIELDS, FRIEND_STATUS } = require("../config/constants");
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -34,4 +36,18 @@ const findByUsername = async (currentUserId, username) => {
   return user;
 };
 
-module.exports = { listUsers, findByUsername };
+/** Real numbers for the profile page: posts, friends and pending friend requests. */
+const getMyStats = async (userId) => {
+  const [postsCount, friendsCount, requestsCount] = await Promise.all([
+    Post.countDocuments({ user: userId }),
+    Friendship.countDocuments({
+      status: FRIEND_STATUS.ACCEPTED,
+      $or: [{ requester: userId }, { recipient: userId }],
+    }),
+    // requests waiting for my answer
+    Friendship.countDocuments({ recipient: userId, status: FRIEND_STATUS.PENDING }),
+  ]);
+  return { postsCount, friendsCount, requestsCount };
+};
+
+module.exports = { listUsers, findByUsername, getMyStats };

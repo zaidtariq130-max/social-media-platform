@@ -1,16 +1,9 @@
 const mongoose = require("mongoose");
-const { REQUEST_STATUS } = require("../config/constants");
 
 const conversationSchema = new mongoose.Schema(
   {
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     messages: [{ type: mongoose.Schema.Types.ObjectId, ref: "Message" }],
-    requestStatus: {
-      type: String,
-      enum: Object.values(REQUEST_STATUS),
-      default: REQUEST_STATUS.PENDING,
-    },
-    requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     blockedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     isGroup: { type: Boolean, default: false },
     // "<smallerUserId>:<biggerUserId>" for 1-to-1 chats only. The unique index below

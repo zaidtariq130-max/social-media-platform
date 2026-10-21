@@ -17,9 +17,7 @@ function Preview({ conversation, isUnread }: { conversation: Conversation; isUnr
 
   return (
     <p className={`text-xs truncate ${isUnread ? "font-semibold text-slate-900" : "text-slate-500"}`}>
-      {conversation.requestStatus === "pending" ? (
-        `Request: ${conversation.lastMessage || "Pending request"}`
-      ) : hasMessages ? (
+      {hasMessages ? (
         conversation.lastMessage || "No messages yet"
       ) : (
         <span className="text-blue-600 font-medium text-[11px] inline-flex items-center gap-1">

@@ -5,6 +5,8 @@ import { MailIcon, UserIcon } from "../components/icons"
 import api from "../api/axios"
 import { getErrorMessage } from "../utils/errors"
 import { avatarFor } from "../utils/avatar"
+import { fetchMyStats } from "../services/friendService"
+import type { UserStats } from "../types/friends"
 
 interface User {
   username: string
@@ -17,6 +19,7 @@ export default function Profile() {
     email: "",
   })
 
+  const [stats, setStats] = useState<UserStats>({ postsCount: 0, friendsCount: 0, requestsCount: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
@@ -37,6 +40,13 @@ export default function Profile() {
       .finally(() => {
         setLoading(false)
       })
+  }, [])
+
+  // real numbers (posts, friends, pending requests); the cards just show 0 if this fails
+  useEffect(() => {
+    fetchMyStats()
+      .then(setStats)
+      .catch(() => {})
   }, [])
 
   return (
@@ -148,7 +158,7 @@ export default function Profile() {
                     className={`text-lg sm:text-xl ${typography.heading}`}
                     style={{ color: colors.text }}
                   >
-                    24
+                    {stats.postsCount}
                   </p>
 
                   <p
@@ -171,14 +181,14 @@ export default function Profile() {
                     className={`text-lg sm:text-xl ${typography.heading}`}
                     style={{ color: colors.text }}
                   >
-                    1.4k
+                    {stats.friendsCount}
                   </p>
 
                   <p
                     className={`${typography.small} font-medium`}
                     style={{ color: colors.secondaryText }}
                   >
-                    Followers
+                    Friends
                   </p>
                 </div>
 
@@ -194,14 +204,14 @@ export default function Profile() {
                     className={`text-lg sm:text-xl ${typography.heading}`}
                     style={{ color: colors.text }}
                   >
-                    382
+                    {stats.requestsCount}
                   </p>
 
                   <p
                     className={`${typography.small} font-medium`}
                     style={{ color: colors.secondaryText }}
                   >
-                    Following
+                    Requests
                   </p>
                 </div>
               </div>

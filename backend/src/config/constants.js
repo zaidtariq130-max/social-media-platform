@@ -43,9 +43,17 @@ module.exports = Object.freeze({
     WINDOW_MS: 10 * 1000,
   }),
 
-  REQUEST_STATUS: Object.freeze({ PENDING: "pending", ACCEPTED: "accepted" }),
+  // friend requests between users; only accepted friends can chat
+  FRIEND_STATUS: Object.freeze({ PENDING: "pending", ACCEPTED: "accepted", DECLINED: "declined" }),
+  // how the logged-in user relates to another user, as shown in the UI
+  RELATIONSHIP: Object.freeze({
+    NONE: "none",
+    FRIENDS: "friends",
+    REQUEST_SENT: "request_sent",
+    REQUEST_RECEIVED: "request_received",
+  }),
   MESSAGE_STATUS: Object.freeze({ SENT: "sent", DELIVERED: "delivered", READ: "read" }),
-  FOLDER: Object.freeze({ PRIMARY: "primary", REQUESTS: "requests", BLOCKED: "blocked" }),
+  FOLDER: Object.freeze({ PRIMARY: "primary", BLOCKED: "blocked" }),
 
   // never send these fields to a client
   USER_HIDDEN_FIELDS: "-password -refreshSessions",
@@ -58,11 +66,12 @@ module.exports = Object.freeze({
     MESSAGE_DELETED: "message:deleted",
     MESSAGES_READ: "messages:read",
     CONVERSATION_NEW: "conversation:new",
-    CONVERSATION_UPDATED: "conversation:updated",
     CONVERSATION_DELETED: "conversation:deleted",
     CONVERSATION_CLEARED: "conversation:cleared",
     PRESENCE_UPDATE: "presence:update",
     PRESENCE_LIST: "presence:list",
+    FRIEND_REQUEST_NEW: "friend:request",
+    FRIEND_REQUEST_UPDATED: "friend:updated",
     // client -> server (and relayed)
     MESSAGE_SEND: "message:send",
     TYPING: "typing",

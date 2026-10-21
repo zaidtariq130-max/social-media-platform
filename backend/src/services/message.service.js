@@ -4,10 +4,11 @@ const AppError = require("../utils/AppError");
 const { idOf, assertValidId } = require("../utils/id");
 const { emitToUsers, userRoom } = require("../socket/emitter");
 const presence = require("../socket/presence");
-const { LIMITS, MESSAGE_STATUS, REQUEST_STATUS, SOCKET_EVENTS } = require("../config/constants");
+const { LIMITS, MESSAGE_STATUS, SOCKET_EVENTS } = require("../config/constants");
 const { serializeMessage } = require("../serializers/message.serializer");
 const { getClearedAtMs } = require("../serializers/conversation.serializer");
 const { getConversationForUser, participantIdsOf, othersOf } = require("./conversation.service");
+const { areFriends } = require("./friend.service");
 
 /**
  * Saves a message and pushes it to everyone in the conversation in real time.
@@ -28,16 +29,13 @@ const sendMessage = async ({ conversationId, senderId, text, senderSocket }) => 
   if (conversation.blockedBy && conversation.blockedBy.length > 0) {
     throw new AppError(403, "You can't send messages in this conversation");
   }
-  // Only the person who sent the request may write until the other side accepts.
-  if (
-    conversation.requestStatus === REQUEST_STATUS.PENDING &&
-    conversation.requestedBy &&
-    idOf(conversation.requestedBy) !== String(senderId)
-  ) {
-    throw new AppError(403, "Accept the message request to reply");
-  }
 
   const recipientIds = othersOf(conversation, senderId);
+
+  // 1-to-1 chats work only while both users are friends (e.g. after unfriending, chat stops)
+  if (!conversation.isGroup && !(await areFriends(senderId, recipientIds[0]))) {
+    throw new AppError(403, "You can only message your friends");
+  }
 
   const message = await Message.create({
     conversationId: conversation._id,

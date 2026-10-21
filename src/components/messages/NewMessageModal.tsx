@@ -1,5 +1,5 @@
 import { useState } from "react"
-import type { Conversation, MessageUser } from "../../types/messages"
+import type { MessageUser } from "../../types/messages"
 import { useUsers } from "../../hooks/useUsers"
 import Modal from "../common/Modal"
 import Badge from "../common/Badge"
@@ -12,10 +12,7 @@ import { UserPlusIcon, UsersIcon } from "./MessageIcons"
 interface NewMessageModalProps {
   isOpen: boolean
   onClose: () => void
-  conversations: Conversation[]
-  /** IDs of users whose chats were cleared — show "Message" not "Request" for them */
-  clearedContactIds?: Set<string>
-  onSendRequest: (user: MessageUser) => void
+  onSelectUser: (user: MessageUser) => void
   onCreateGroup?: (name: string, participantIds: string[]) => Promise<void> | void
 }
 
@@ -24,9 +21,7 @@ type ModalTab = "suggested" | "username" | "group"
 export default function NewMessageModal({
   isOpen,
   onClose,
-  conversations,
-  clearedContactIds,
-  onSendRequest,
+  onSelectUser,
   onCreateGroup,
 }: NewMessageModalProps) {
   const [activeTab, setActiveTab] = useState<ModalTab>("suggested")
@@ -41,8 +36,8 @@ export default function NewMessageModal({
     onClose()
   }
 
-  function sendRequestAndClose(user: MessageUser) {
-    onSendRequest(user)
+  function selectUserAndClose(user: MessageUser) {
+    onSelectUser(user)
     // Unmount on the next tick so the click cannot fall through onto the
     // chat-info button sitting behind the modal.
     window.setTimeout(close, 0)
@@ -81,14 +76,12 @@ export default function NewMessageModal({
             users={users}
             loading={loading}
             error={error}
-            conversations={conversations}
-            clearedContactIds={clearedContactIds}
-            onSelectUser={sendRequestAndClose}
+            onSelectUser={selectUserAndClose}
           />
         )}
 
         {activeTab === "username" && (
-          <AddByUsernameForm onSubmit={sendRequestAndClose} onCancel={close} />
+          <AddByUsernameForm onSubmit={selectUserAndClose} onCancel={close} />
         )}
 
         {activeTab === "group" && onCreateGroup && (

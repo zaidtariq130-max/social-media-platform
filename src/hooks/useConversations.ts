@@ -29,7 +29,7 @@ function withMessages(conv: Conversation, messages: Message[]): Conversation {
 
 /**
  * Owns the conversation list: loads it once over REST, then keeps it in sync
- * through Socket.io events (new messages, requests, typing, presence, read receipts).
+ * through Socket.io events (new messages, typing, presence, read receipts).
  */
 export function useConversations({ currentUserId, activeConversationId }: Options) {
   const [rawConversations, setConversations] = useState<Conversation[]>([])
@@ -128,17 +128,10 @@ export function useConversations({ currentUserId, activeConversationId }: Option
         prev.some((c) => c.id === conversation.id) ? prev : [mapConversation(conversation), ...prev]
       ),
 
-    "conversation:updated": ({ conversationId, requestStatus }) =>
-      updateConversation(conversationId, (c) => ({
-        ...c,
-        requestStatus,
-        folder: c.isBlocked ? "blocked" : requestStatus === "accepted" ? "primary" : c.folder,
-      })),
-
     "conversation:deleted": ({ conversationId }) =>
       setConversations((prev) => prev.filter((c) => c.id !== conversationId)),
 
-    // Only the user who cleared will receive this event (backend only emits to requester)
+    // Only the user who cleared will receive this event (backend only emits to the user who cleared)
     "conversation:cleared": ({ conversationId }) =>
       updateConversation(conversationId, (c) => withMessages(c, [])),
 

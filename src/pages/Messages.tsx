@@ -58,13 +58,8 @@ export default function Messages() {
   // Mobile navigation: whether chat view is open instead of list view
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false)
 
-  // Track participant user IDs whose chats were cleared locally.
-  // These contacts are still saved in the DB — we just hide the conversation from the sidebar.
-  // Used to show "Message" instead of "Request" in the New Message modal.
-  const [clearedContactIds, setClearedContactIds] = useState<Set<string>>(() => new Set())
-
   // Clear/remove hides the details panel visually (no conversation) but used to
-  // leave it "open". The next new request/chat then showed delete-contact by itself.
+  // leave it "open". The next new chat then showed delete-contact by itself.
   useEffect(() => {
     setIsInfoDrawerOpen(false)
   }, [activeConversationId, draftUser?.id])
@@ -103,7 +98,6 @@ export default function Messages() {
         id: `draft_${draftUser.id}`,
         participant: draftUser,
         folder: "primary",
-        requestStatus: "accepted",
         isBlocked: false,
         isMuted: false,
         unreadCount: 0,
@@ -129,39 +123,24 @@ export default function Messages() {
     if (!result.ok) showToast(result.error)
   }
 
-  // First message to a new/restored user.
-  // If the conversation already exists in DB (e.g. after "Clear Chat"), it is restored
-  // from the backend and no new request is needed — the existing requestStatus is reused.
+  // First message to a friend. If the conversation already exists in DB (e.g. after
+  // "Clear Chat"), the backend returns it and it is restored here.
+  // The backend refuses (403) when the two users are not friends.
   async function handleSendFirstMessage(user: MessageUser, text: string) {
     try {
       const res = await api.post("/conversations", { participantId: user.id })
       const conv = res.data.conversation
       const newId: string = conv.id
-      const requestStatus =
-        conv.requestStatus === "accepted" || clearedContactIds.has(user.id)
-          ? "accepted"
-          : (conv.requestStatus ?? "pending")
-      const requestedBy = conv.requestedBy ?? currentUserId
-
-      // Determine correct folder for sender
-      const folder =
-        requestStatus === "accepted" || String(requestedBy) === String(currentUserId)
-          ? "primary"
-          : "requests"
 
       setConversations((prev) => {
-        // If the conversation was hidden (cleared) but already exists in local state, restore it
-        const alreadyPresent = prev.some((c) => c.id === newId)
-        if (alreadyPresent) return prev
+        // If the conversation was hidden (cleared) but already exists in local state, keep it
+        if (prev.some((c) => c.id === newId)) return prev
 
-        // Re-add the conversation (restored from backend after clear, or brand new)
         return [
           {
             id: newId,
             participant: conv.participant || user,
-            folder,
-            requestStatus,
-            requestedBy,
+            folder: "primary",
             isBlocked: false,
             isMuted: false,
             unreadCount: 0,
@@ -174,13 +153,6 @@ export default function Messages() {
         ]
       })
 
-      // Conversation is now visible again — remove from cleared set
-      setClearedContactIds((prev) => {
-        const next = new Set(prev)
-        next.delete(user.id)
-        return next
-      })
-
       setDraftUser(null)
       setActiveFolder("primary")
       setActiveConversationId(newId)
@@ -188,61 +160,14 @@ export default function Messages() {
 
       const result = await sendMessage(newId, text)
       if (!result.ok) showToast(result.error)
-    } catch {
-      showToast("Failed to send message. Is the backend running?")
+    } catch (err) {
+      showToast(getErrorMessage(err, "Failed to send message. Is the backend running?"))
     }
   }
 
   // Send quick heart
   function handleSendHeart() {
     handleSendMessage("❤️")
-  }
-
-  // Accept Instagram Message Request
-  function handleAcceptRequest(conversationId: string) {
-    setConversations((prev) =>
-      prev.map((conv) => {
-        if (conv.id === conversationId) {
-          return {
-            ...conv,
-            folder: "primary",
-            requestStatus: "accepted",
-            unreadCount: 0,
-          }
-        }
-        return conv
-      })
-    )
-    setActiveFolder("primary")
-    showToast("Message request accepted! Moved to Primary inbox.")
-
-    // Persist to backend
-    persist(api.put(`/conversations/${conversationId}/accept`))
-  }
-
-  // Decline / Delete Instagram Message Request
-  function handleDeclineRequest(conversationId: string) {
-    const conv = conversations.find((c) => c.id === conversationId)
-    const targetName = conv?.participant.name || conv?.participant.username || "this request"
-
-    setDeleteConfirm({
-      title: "Delete Message Request?",
-      description: `Are you sure you want to delete the message request from ${targetName}?`,
-      confirmText: "Yes, Delete",
-      cancelText: "No, Cancel",
-      onConfirm: () => {
-        setConversations((prev) => prev.filter((c) => c.id !== conversationId))
-        if (activeConversationId === conversationId) {
-          setActiveConversationId(null)
-          setIsMobileChatOpen(false)
-        }
-        setDeleteConfirm(null)
-        showToast("Message request deleted.")
-
-        // Persist so it doesn't come back on refresh
-        persist(api.delete(`/conversations/${conversationId}`))
-      },
-    })
   }
 
   // Block / Unblock User
@@ -262,41 +187,14 @@ export default function Messages() {
     persist(api.put(`/conversations/${conversationId}/block`))
   }
 
-  // Remove contact permanently from list
-  function handleDeleteConversation(conversationId: string) {
-    const conv = conversations.find((c) => c.id === conversationId)
-    const username = conv?.participant?.username || "this user"
-
-    setDeleteConfirm({
-      title: "Remove Contact Permanently?",
-      description: `This permanently deletes your whole chat with @${username} for BOTH of you, and removes the contact. Use "Clear Chat" instead if you only want to hide the messages for yourself. To talk again later you will need to send a new message request.`,
-      confirmText: "Yes, Remove Contact",
-      cancelText: "No, Cancel",
-      onConfirm: () => {
-        setConversations((prev) => prev.filter((c) => c.id !== conversationId))
-        if (activeConversationId === conversationId) {
-          setActiveConversationId(null)
-          setIsMobileChatOpen(false)
-        }
-        setDeleteConfirm(null)
-        showToast(`@${username} removed from contacts.`)
-
-        // Persist permanent removal to backend
-        persist(api.delete(`/conversations/${conversationId}`))
-      },
-    })
-  }
-
   // Clear chat: hide history and remove the thread from the left list.
-  // Contact stays saved — New Message still shows "Message", not "Request".
   function handleClearMessages(conversationId: string) {
     const conv = conversations.find((c) => c.id === conversationId)
     const username = conv?.participant?.username || "this user"
-    const participantId = conv?.participant?.id
 
     setDeleteConfirm({
       title: "Clear Chat?",
-      description: `All messages with @${username} will be removed from your view. The contact stays saved — you can message them again anytime without a new request.`,
+      description: `All messages with @${username} will be removed from your view. You can message them again anytime from New Message.`,
       confirmText: "Yes, Clear Chat",
       cancelText: "No, Cancel",
       onConfirm: () => {
@@ -309,22 +207,17 @@ export default function Messages() {
                   lastMessage: "",
                   lastMessageTime: "",
                   unreadCount: 0,
-                  requestStatus: "accepted",
                   folder: c.isBlocked ? "blocked" : "primary",
                 }
               : c
           )
         )
-        // Hide from the left list / DP strip. User can message again from
-        // "Start a new conversation" — still a Message, not a Request.
+        // Hide from the left list / DP strip. User can message again from New Message.
         if (activeConversationId === conversationId) {
           setActiveConversationId(null)
           setIsMobileChatOpen(false)
         }
         setActiveFolder("primary")
-        if (participantId) {
-          setClearedContactIds((prev) => new Set([...prev, participantId]))
-        }
         setDeleteConfirm(null)
         showToast("Chat cleared. Use New Message to chat again.")
 
@@ -453,8 +346,8 @@ export default function Messages() {
     )
   }
 
-  // Send message request to user
-  function handleSendRequest(user: MessageUser) {
+  // Open the chat with a friend chosen in "New Message" (or an empty draft if there is none yet)
+  function handleStartChat(user: MessageUser) {
     const existing = conversations.find(
       (c) =>
         !c.isGroup &&
@@ -463,27 +356,18 @@ export default function Messages() {
     )
 
     if (existing) {
-      const isSavedContact =
-        existing.requestStatus === "accepted" || clearedContactIds.has(existing.participant.id)
       setDraftUser(null)
-      setActiveFolder(isSavedContact ? "primary" : existing.folder)
+      setActiveFolder(existing.folder)
       setActiveConversationId(existing.id)
       setIsMobileChatOpen(true)
-      showToast(
-        existing.requestStatus === "pending" && !isSavedContact
-          ? `Request already sent to @${user.username}`
-          : `Opened chat with @${user.username}`
-      )
+      showToast(`Opened chat with @${user.username}`)
       return
     }
 
-    // Saved contact whose thread was hidden: still a Message, not a Request
-    const saved = clearedContactIds.has(user.id)
     setDraftUser({ ...user })
     setActiveConversationId(null)
     setActiveFolder("primary")
     setIsMobileChatOpen(true)
-    if (saved) showToast(`Message @${user.username}`)
   }
 
   // Create a new group conversation
@@ -540,10 +424,7 @@ export default function Messages() {
             isTyping={isTypingIn(activeConversationId)}
             onSendMessage={handleSendMessage}
             onSendHeart={handleSendHeart}
-            onAcceptRequest={handleAcceptRequest}
-            onDeclineRequest={handleDeclineRequest}
             onToggleBlockUser={handleToggleBlockUser}
-            onDeleteConversation={handleDeleteConversation}
             onClearMessages={handleClearMessages}
             onToggleMute={handleToggleMute}
             onDeleteSingleMessage={handleDeleteSingleMessage}
@@ -560,13 +441,11 @@ export default function Messages() {
         </div>
       </div>
 
-      {/* New Message / Add User Modal */}
+      {/* New Message Modal */}
       <NewMessageModal
         isOpen={isNewMessageModalOpen}
         onClose={() => setIsNewMessageModalOpen(false)}
-        conversations={conversations}
-        clearedContactIds={clearedContactIds}
-        onSendRequest={handleSendRequest}
+        onSelectUser={handleStartChat}
         onCreateGroup={handleCreateGroup}
       />
 
@@ -577,7 +456,6 @@ export default function Messages() {
         onClose={() => setIsInfoDrawerOpen(false)}
         onToggleBlockUser={handleToggleBlockUser}
         onToggleMute={handleToggleMute}
-        onDeleteConversation={handleDeleteConversation}
         onClearMessages={handleClearMessages}
       />
 

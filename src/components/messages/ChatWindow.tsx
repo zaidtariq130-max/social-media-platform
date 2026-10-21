@@ -27,10 +27,7 @@ interface Props {
   isTyping: boolean
   onSendMessage: (text: string) => void
   onSendHeart: () => void
-  onAcceptRequest: (conversationId: string) => void
-  onDeclineRequest: (conversationId: string) => void
   onToggleBlockUser: (conversationId: string) => void
-  onDeleteConversation: (conversationId: string) => void
   onClearMessages: (conversationId: string) => void
   onToggleMute: (conversationId: string) => void
   onDeleteSingleMessage: (conversationId: string, messageId: string) => void
@@ -47,8 +44,6 @@ export default function ChatWindow({
   isTyping,
   onSendMessage,
   onSendHeart,
-  onAcceptRequest,
-  onDeclineRequest,
   onToggleBlockUser,
   onClearMessages,
   onBackToList,
@@ -112,11 +107,9 @@ export default function ChatWindow({
     )
   }
 
-  const { id, participant, isBlocked, isGroup, groupName, requestStatus, requestedBy } = conversation
+  const { id, participant, isBlocked, isGroup, groupName } = conversation
   const title = isGroup ? groupName || participant.name : participant.name
-  const isPendingForMe = requestStatus === "pending" && requestedBy !== currentUserId
-  const isPendingByMe = requestStatus === "pending" && requestedBy === currentUserId
-  const canSend = !isBlocked && !isPendingForMe && text.trim().length > 0
+  const canSend = !isBlocked && text.trim().length > 0
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -281,24 +274,7 @@ export default function ChatWindow({
 
       {/* Footer */}
       <div className="border-t p-3 shrink-0" style={{ borderColor: colors.border }}>
-        {isPendingForMe ? (
-          <div className="text-center space-y-2">
-            <p className="text-xs" style={{ color: colors.mutedText }}>
-              {title} wants to send you a message.
-            </p>
-            <div className="flex justify-center gap-2">
-              <button type="button" onClick={() => onAcceptRequest(id)} className="px-4 py-1.5 rounded-full text-xs font-semibold text-white cursor-pointer" style={{ backgroundColor: colors.primary }}>
-                Accept
-              </button>
-              <button type="button" onClick={() => onDeclineRequest(id)} className="px-4 py-1.5 rounded-full text-xs font-semibold border cursor-pointer" style={{ borderColor: colors.border, color: colors.text }}>
-                Decline
-              </button>
-              <button type="button" onClick={() => onToggleBlockUser(id)} className="px-4 py-1.5 rounded-full text-xs font-semibold text-rose-600 border border-rose-200 cursor-pointer">
-                Block
-              </button>
-            </div>
-          </div>
-        ) : isBlocked ? (
+        {isBlocked ? (
           <div className="text-center space-y-2">
             <p className="text-xs" style={{ color: colors.mutedText }}>You blocked this user.</p>
             <div className="flex justify-center gap-2">
@@ -312,11 +288,6 @@ export default function ChatWindow({
           </div>
         ) : (
           <>
-            {isPendingByMe && (
-              <p className="text-[11px] text-center mb-2" style={{ color: colors.mutedText }}>
-                Request sent. They'll see your messages once they accept.
-              </p>
-            )}
             <form onSubmit={submit} className="flex items-center gap-2">
               <input
                 value={text}

@@ -3,6 +3,7 @@ import Home from "./pages/Home"
 import Login from "./pages/Login"
 import Profile from "./pages/Profile"
 import Messages from "./pages/Messages"
+import Friends from "./pages/Friends"
 import { useEffect, useState } from "react"
 import ProtectedRoute from "./routes/ProtectedRoute"
 import ProtectedLayout from "./routes/ProtectedLayout"
@@ -61,6 +62,7 @@ function App() {
           >
             <Route path="/" element={<Home />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/friends" element={<Friends />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 

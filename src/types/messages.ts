@@ -23,9 +23,7 @@ export interface Message {
   reactions?: string[]
 }
 
-export type FolderType = "primary" | "blocked" | "requests" | "groups"
-
-export type RequestStatus = "pending" | "accepted" | "declined"
+export type FolderType = "primary" | "blocked" | "groups"
 
 export interface Conversation {
   id: string
@@ -35,8 +33,6 @@ export interface Conversation {
   lastMessageTime: string
   unreadCount: number
   folder: FolderType
-  requestStatus: RequestStatus
-  requestedBy?: string
   isBlocked: boolean
   isMuted: boolean
   isGroup?: boolean

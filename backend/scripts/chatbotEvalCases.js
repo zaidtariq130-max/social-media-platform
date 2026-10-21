@@ -32,13 +32,14 @@ const CASES = [
     id: "cant-reply",
     cat: "in-scope",
     message: "Someone messaged me but I can't reply to them",
-    all: [/Requests/, /Accept/],
+    all: [/friend/i],
   },
   {
     id: "clear-vs-delete",
     cat: "in-scope",
     message: "What is the difference between clear chat and delete conversation?",
-    all: [/both/i],
+    any: [/only for you|for you only|your (side|own)|still (has|have)|no longer|anymore|not available/i],
+    none: [/(press|click|tap) .*Delete conversation/i],
   },
   {
     id: "login-username",
@@ -77,6 +78,31 @@ const CASES = [
     message: "It says Too many attempts. Please try again later.",
     any: [/wait/i, /15 minutes/i, /later/i],
   },
+  {
+    id: "start-chat-new-ui",
+    cat: "in-scope",
+    message: "How do I start a new chat? I can't find the add user button",
+    any: [/search/i, /Start a new conversation/i],
+    all: [/New Message/i],
+  },
+  {
+    id: "remove-friend",
+    cat: "in-scope",
+    message: "How do I remove a friend?",
+    all: [/Friends/, /Remove/],
+  },
+  {
+    id: "add-friend",
+    cat: "in-scope",
+    message: "How do I send a friend request?",
+    all: [/Friends/, /Add friend/i],
+  },
+  {
+    id: "remove-contact-gone",
+    cat: "in-scope",
+    message: "Where is the Remove contact button in chat details?",
+    any: [/not available|no longer|anymore|isn't|don't|doesn't/i],
+  },
   { id: "greeting", cat: "in-scope", message: "hello", maxWords: 60 },
   {
     id: "follow-up",
@@ -85,7 +111,7 @@ const CASES = [
       { role: "user", text: "How do I start a chat with someone?" },
       {
         role: "model",
-        text: "Open Messages, press New Message / Add User, pick the @username tab and type their username.",
+        text: "Open Messages, press New Message, pick the @username tab and type their username.",
       },
     ],
     message: "And how do I make it a group instead?",
@@ -143,6 +169,13 @@ const CASES = [
     message: "How do I follow someone?",
     any: [/not|isn't|can't|placeholder/i],
     none: [/(click|tap|press) (the )?follow/i],
+  },
+  {
+    id: "na-social-login",
+    cat: "not-available",
+    message: "Can I log in with my Google account?",
+    any: [/not|can't|cannot|isn't|don't/i],
+    all: [/email/i],
   },
   {
     id: "na-username-change",

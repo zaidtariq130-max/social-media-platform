@@ -4,7 +4,8 @@ const User = require("../models/User");
 const AppError = require("../utils/AppError");
 const { idOf, assertValidId, directKeyOf } = require("../utils/id");
 const { emitToUsers } = require("../socket/emitter");
-const { CHAT, REQUEST_STATUS, SOCKET_EVENTS, USER_HIDDEN_FIELDS } = require("../config/constants");
+const { CHAT, SOCKET_EVENTS, USER_HIDDEN_FIELDS } = require("../config/constants");
+const { areFriends, assertAllFriends } = require("./friend.service");
 const { serializeUser } = require("../serializers/user.serializer");
 const { serializeConversation } = require("../serializers/conversation.serializer");
 
@@ -83,16 +84,18 @@ const createDirectConversation = async (userId, participantId) => {
   }
 
   if (!conversation) {
+    // a new chat can only be started with an accepted friend
+    if (!(await areFriends(userId, participantId))) {
+      throw new AppError(403, "You can only message your friends. Send a friend request first.");
+    }
     try {
       conversation = await Conversation.create({
         participants: [userId, participantId],
-        requestStatus: REQUEST_STATUS.PENDING,
-        requestedBy: userId,
         directKey,
       });
       await emitConversationNew(conversation._id, [participantId]);
     } catch (err) {
-      // two requests raced: the other one won, so just use its chat
+      // two calls raced: the other one won, so just use its chat
       if (err.code !== 11000) throw err;
       conversation = await Conversation.findOne({ directKey });
       existing = true;
@@ -104,8 +107,6 @@ const createDirectConversation = async (userId, participantId) => {
     conversation: {
       id: idOf(conversation),
       participant: serializeUser(otherUser),
-      requestStatus: conversation.requestStatus,
-      requestedBy: conversation.requestedBy ? idOf(conversation.requestedBy) : null,
     },
   };
 };
@@ -119,12 +120,16 @@ const createGroupConversation = async (userId, { name, participantIds }) => {
   const found = await User.countDocuments({ _id: { $in: memberIds } });
   if (found !== memberIds.length) throw new AppError(400, "One or more users were not found");
 
+  // everyone in a group must be a friend of the person creating it
+  await assertAllFriends(
+    userId,
+    memberIds.filter((id) => id !== String(userId))
+  );
+
   const group = await Conversation.create({
     participants: memberIds,
-    requestStatus: REQUEST_STATUS.ACCEPTED,
     isGroup: true,
     groupName: name || "Group Chat",
-    requestedBy: userId,
     lastMessage: "Group created",
     lastMessageTime: Date.now(),
   });
@@ -136,25 +141,6 @@ const createGroupConversation = async (userId, { name, participantIds }) => {
   );
 
   return serializeConversation(populated, userId);
-};
-
-const acceptConversation = async (userId, conversationId) => {
-  const conversation = await getConversationForUser(conversationId, userId);
-
-  if (conversation.requestedBy && idOf(conversation.requestedBy) === String(userId)) {
-    throw new AppError(
-      400,
-      "You cannot accept your own request. Waiting for the recipient to accept."
-    );
-  }
-
-  conversation.requestStatus = REQUEST_STATUS.ACCEPTED;
-  await conversation.save();
-
-  emitToUsers(participantIdsOf(conversation), SOCKET_EVENTS.CONVERSATION_UPDATED, {
-    conversationId: idOf(conversation),
-    requestStatus: REQUEST_STATUS.ACCEPTED,
-  });
 };
 
 const deleteConversation = async (userId, conversationId) => {
@@ -174,21 +160,12 @@ const clearMessages = async (userId, conversationId) => {
   if (!conversation.clearedAt) conversation.clearedAt = new Map();
   conversation.clearedAt.set(String(userId), new Date());
 
-  const becameAccepted = conversation.requestStatus !== REQUEST_STATUS.ACCEPTED;
-  if (becameAccepted) conversation.requestStatus = REQUEST_STATUS.ACCEPTED;
-
   await conversation.save();
 
   emitToUsers([userId], SOCKET_EVENTS.CONVERSATION_CLEARED, {
     conversationId: idOf(conversation),
   });
 
-  if (becameAccepted) {
-    emitToUsers(participantIdsOf(conversation), SOCKET_EVENTS.CONVERSATION_UPDATED, {
-      conversationId: idOf(conversation),
-      requestStatus: REQUEST_STATUS.ACCEPTED,
-    });
-  }
 };
 
 /** @returns {boolean} true if the user is now blocked */
@@ -212,7 +189,6 @@ module.exports = {
   listConversations,
   createDirectConversation,
   createGroupConversation,
-  acceptConversation,
   deleteConversation,
   clearMessages,
   toggleBlock,

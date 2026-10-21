@@ -7,7 +7,6 @@ import type { Conversation, FolderType, MessageUser } from "../types/messages"
 export function isHiddenEmptyThread(conv: Conversation): boolean {
   if (conv.isGroup) return false
   if (conv.isBlocked || conv.folder === "blocked") return false
-  if (conv.folder === "requests" || conv.requestStatus === "pending") return false
   return !conv.messages?.length
 }
 
@@ -47,10 +46,6 @@ export function filterConversations(
     if (conv.isBlocked) return false
     return conv.folder === activeFolder
   })
-}
-
-export function countPendingRequests(conversations: Conversation[]): number {
-  return conversations.filter((c) => c.folder === "requests" && c.requestStatus === "pending").length
 }
 
 export function countBlocked(conversations: Conversation[]): number {

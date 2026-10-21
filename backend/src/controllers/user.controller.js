@@ -14,4 +14,10 @@ const getUserByUsername = async (req, res) => {
   return sendSuccess(res, { user: serializeUser(user) });
 };
 
-module.exports = { getUsers, getUserByUsername };
+// GET /api/users/me/stats — posts / friends / pending requests of the logged-in user
+const getMyStats = async (req, res) => {
+  const stats = await userService.getMyStats(req.user.id);
+  return sendSuccess(res, { stats });
+};
+
+module.exports = { getUsers, getUserByUsername, getMyStats };

@@ -57,7 +57,6 @@ export function useChatSocket(handlers: ChatSocketHandlers) {
       "message:deleted",
       "messages:read",
       "conversation:new",
-      "conversation:updated",
       "conversation:deleted",
       "conversation:cleared",
       "typing",

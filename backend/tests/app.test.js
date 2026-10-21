@@ -37,7 +37,16 @@ test("unknown route -> standard 404 json", async () => {
 });
 
 test("protected routes reject missing and bad tokens", async () => {
-  for (const path of ["/api/posts", "/api/users", "/api/conversations", "/api/auth/profile"]) {
+  for (const path of [
+    "/api/posts",
+    "/api/users",
+    "/api/conversations",
+    "/api/auth/profile",
+    "/api/friends",
+    "/api/friends/people",
+    "/api/friends/requests",
+    "/api/users/me/stats",
+  ]) {
     assert.equal((await call(path)).status, 401, path);
     assert.equal(
       (await call(path, { headers: { Authorization: "Bearer junk" } })).status,

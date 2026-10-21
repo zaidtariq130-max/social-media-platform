@@ -1,4 +1,4 @@
-const { FOLDER, MESSAGE_STATUS, REQUEST_STATUS } = require("../config/constants");
+const { FOLDER, MESSAGE_STATUS } = require("../config/constants");
 const { idOf } = require("../utils/id");
 const { avatarUrl, serializeUser } = require("./user.serializer");
 const { serializeMessage } = require("./message.serializer");
@@ -24,13 +24,7 @@ const serializeGroupParticipant = (conv, memberCount) => {
   };
 };
 
-const folderFor = ({ isBlocked, conv, requestedBy, viewer }) => {
-  if (isBlocked) return FOLDER.BLOCKED;
-  if (conv.requestStatus === REQUEST_STATUS.ACCEPTED || requestedBy === viewer) {
-    return FOLDER.PRIMARY;
-  }
-  return FOLDER.REQUESTS;
-};
+const folderFor = (isBlocked) => (isBlocked ? FOLDER.BLOCKED : FOLDER.PRIMARY);
 
 /**
  * Shapes a conversation for one viewer.
@@ -60,7 +54,6 @@ const serializeConversation = (conv, viewerId) => {
   ).length;
 
   const lastVisible = visibleMessages[visibleMessages.length - 1];
-  const requestedBy = conv.requestedBy ? idOf(conv.requestedBy) : null;
 
   return {
     id: idOf(conv),
@@ -69,9 +62,7 @@ const serializeConversation = (conv, viewerId) => {
     memberIds: participants.map(idOf),
     isGroup: Boolean(conv.isGroup),
     groupName: conv.groupName || "",
-    folder: folderFor({ isBlocked, conv, requestedBy, viewer }),
-    requestStatus: conv.requestStatus,
-    requestedBy,
+    folder: folderFor(isBlocked),
     isBlocked,
     isMuted: false,
     unreadCount,

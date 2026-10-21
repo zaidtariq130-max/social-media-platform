@@ -7,7 +7,6 @@ interface Props {
 }
 
 function headline(folder: FolderType, searchQuery: string): string {
-  if (folder === "requests") return "No message requests right now"
   if (folder === "blocked") return "No blocked users"
   if (folder === "groups") return "No group chats yet"
   if (searchQuery) return `No chats found for "${searchQuery}"`
@@ -66,7 +65,7 @@ export default function ConversationListEmpty({ activeFolder, searchQuery, onOpe
       {searchQuery ? (
         <div className="pt-2 space-y-2">
           <p className="text-[11px] text-slate-500">
-            Not in current chats? Search the entire database to re-add them.
+            Not in current chats? Start a new message with one of your friends.
           </p>
           <button
             type="button"
@@ -74,13 +73,9 @@ export default function ConversationListEmpty({ activeFolder, searchQuery, onOpe
             className="px-3.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 shadow-xs transition cursor-pointer inline-flex items-center gap-1.5"
           >
             <span>🔍</span>
-            <span>Search All Users</span>
+            <span>New Message</span>
           </button>
         </div>
-      ) : activeFolder === "requests" ? (
-        <p className="text-[11px] text-slate-400">
-          Incoming messages from new users will show up here to accept or decline.
-        </p>
       ) : (
         <button
           type="button"

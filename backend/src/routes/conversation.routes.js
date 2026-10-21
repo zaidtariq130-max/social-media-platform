@@ -20,7 +20,6 @@ router.use(authenticate);
 router.get("/", controller.getConversations);
 router.post("/", validate({ body: createConversationBody }), controller.createConversation);
 router.post("/group", validate({ body: createGroupBody }), controller.createGroupConversation);
-router.put("/:id/accept", validate({ params: idParam }), controller.acceptConversation);
 router.put("/:id/clear", validate({ params: idParam }), controller.clearMessages);
 router.put("/:id/block", validate({ params: idParam }), controller.toggleBlockConversation);
 router.delete("/:id", validate({ params: idParam }), controller.deleteConversation);

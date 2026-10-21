@@ -5,7 +5,6 @@ interface Props {
   activeFolder: FolderType
   onChangeFolder: (folder: FolderType) => void
   blockedCount: number
-  requestsCount: number
   unreadGroupsCount: number
 }
 
@@ -13,7 +12,6 @@ export default function FolderTabs({
   activeFolder,
   onChangeFolder,
   blockedCount,
-  requestsCount,
   unreadGroupsCount,
 }: Props) {
   const items: TabItem<FolderType>[] = [
@@ -28,11 +26,6 @@ export default function FolderTabs({
       label: "Blocked",
       accent: "rose",
       badge: { count: blockedCount, tone: "rose" },
-    },
-    {
-      id: "requests",
-      label: "Requests",
-      badge: { count: requestsCount, tone: "solidRose" },
     },
   ]
 

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
 import type { MessageUser } from "../types/messages"
-import { fetchUsers } from "../services/userService"
+import { fetchFriends } from "../services/friendService"
 
-/** Loads the list of other users whenever `enabled` becomes true. */
+/** Loads the logged-in user's friends (the only people they can message) whenever `enabled` becomes true. */
 export function useUsers(enabled: boolean) {
   const [users, setUsers] = useState<MessageUser[]>([])
   const [loading, setLoading] = useState(false)
@@ -14,12 +14,12 @@ export function useUsers(enabled: boolean) {
 
     setLoading(true)
     setError("")
-    fetchUsers()
+    fetchFriends()
       .then((list) => {
         if (!cancelled) setUsers(list)
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load users. Is the backend running?")
+        if (!cancelled) setError("Could not load your friends. Is the backend running?")
       })
       .finally(() => {
         if (!cancelled) setLoading(false)

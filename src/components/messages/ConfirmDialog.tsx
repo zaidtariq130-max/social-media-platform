@@ -13,7 +13,7 @@ interface ConfirmDialogProps {
   onClose: () => void
 }
 
-/** Yes / No confirmation used for remove contact, clear chat, delete request. */
+/** Yes / No confirmation used for remove contact and clear chat. */
 export default function ConfirmDialog({ dialog, onClose }: ConfirmDialogProps) {
   if (!dialog) return null
 

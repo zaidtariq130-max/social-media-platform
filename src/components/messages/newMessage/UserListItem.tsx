@@ -1,51 +1,14 @@
 import type { MessageUser } from "../../../types/messages"
-import { colors } from "../../../theme"
 import Avatar from "../../common/Avatar"
 import { CheckCircleIcon } from "../MessageIcons"
 
-export type UserRelation = "none" | "pending" | "accepted"
-
 interface Props {
   user: MessageUser
-  relation: UserRelation
   onAction: (user: MessageUser) => void
 }
 
-function ActionButton({ relation, onClick }: { relation: UserRelation; onClick: () => void }) {
-  if (relation === "pending") {
-    return (
-      <span className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-500 inline-block">
-        Requested
-      </span>
-    )
-  }
-
-  if (relation === "accepted") {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
-      >
-        Message
-      </button>
-    )
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-white shadow-xs hover:opacity-90 active:scale-95 transition cursor-pointer"
-      style={{ backgroundColor: colors.primary }}
-    >
-      Request
-    </button>
-  )
-}
-
-/** A user row with a context-aware action (Request / Requested / Message). */
-export default function UserListItem({ user, relation, onAction }: Props) {
+/** A friend row with a "Message" button. */
+export default function UserListItem({ user, onAction }: Props) {
   return (
     <div className="p-2.5 rounded-2xl flex items-center justify-between border border-slate-100 hover:border-slate-200 hover:bg-slate-50/80 transition">
       <div className="flex items-center gap-3 min-w-0">
@@ -66,7 +29,13 @@ export default function UserListItem({ user, relation, onAction }: Props) {
       </div>
 
       <div className="shrink-0 ml-2">
-        <ActionButton relation={relation} onClick={() => onAction(user)} />
+        <button
+          type="button"
+          onClick={() => onAction(user)}
+          className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition cursor-pointer"
+        >
+          Message
+        </button>
       </div>
     </div>
   )

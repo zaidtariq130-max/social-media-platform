@@ -9,6 +9,8 @@ const router = express.Router();
 // protected: only logged-in users can list others
 router.get("/", authenticate, validate({ query: listUsersQuery }), controller.getUsers);
 
+router.get("/me/stats", authenticate, controller.getMyStats);
+
 router.get(
   "/by-username/:username",
   authenticate,

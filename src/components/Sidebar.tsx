@@ -1,10 +1,12 @@
 import type { CSSProperties } from "react"
 import { Link, useLocation } from "react-router-dom"
-import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,ChatIcon} from "./icons"
+import {BrandIcon,HomeIcon,UserIcon,LogoutIcon,ChevronLeftIcon,ChatIcon,UsersIcon} from "./icons"
 import { colors, layout } from "../theme"
 import { APP_NAME } from "../config/app"
 import api, { clearAccessToken } from "../api/axios"
 import { clearStoredUser } from "../utils/currentUser"
+import { useRequestCount } from "../hooks/useRequestCount"
+import Badge from "./common/Badge"
 
 interface SidebarProps {
   isOpen: boolean
@@ -21,6 +23,7 @@ const themeVars = {
 const navLinks = [
   { to: "/", label: "Home", Icon: HomeIcon },
   { to: "/messages", label: "Messages", Icon: ChatIcon },
+  { to: "/friends", label: "Friends", Icon: UsersIcon },
   { to: "/profile", label: "Profile", Icon: UserIcon },
 ]
 
@@ -31,6 +34,7 @@ export default function Sidebar({
   setIsLoggedIn,
 }: SidebarProps) {
   const location = useLocation()
+  const requestCount = useRequestCount()
 
   async function handleLogout() {
     try {
@@ -54,7 +58,7 @@ export default function Sidebar({
 
   const labelVisibility = isOpen ? "" : "hidden"
 
-  const navItemClass = `flex items-center gap-3 rounded-xl px-3 py-3 transition ${
+  const navItemClass = `relative flex items-center gap-3 rounded-xl px-3 py-3 transition ${
     isOpen ? "" : "justify-center"
   }`
 
@@ -158,6 +162,11 @@ export default function Sidebar({
                 >
                   <Icon className="w-5 h-5 shrink-0" />
                   <span className={labelVisibility}>{label}</span>
+                  {to === "/friends" && requestCount > 0 && (
+                    <Badge tone="solidRose" className={isOpen ? "ml-auto" : "absolute top-1 right-1"}>
+                      {requestCount}
+                    </Badge>
+                  )}
                 </Link>
               )
             })}

@@ -1,4 +1,4 @@
-import type { Conversation, Message, RequestStatus } from "./messages"
+import type { Conversation, Message } from "./messages"
 
 /** Payloads of events the server pushes to the client. */
 export interface ServerToClientEvents {
@@ -6,7 +6,6 @@ export interface ServerToClientEvents {
   "message:deleted": (p: { conversationId: string; messageId: string }) => void
   "messages:read": (p: { conversationId: string; readerId: string }) => void
   "conversation:new": (p: { conversation: RawConversation }) => void
-  "conversation:updated": (p: { conversationId: string; requestStatus: RequestStatus }) => void
   "conversation:deleted": (p: { conversationId: string }) => void
   "conversation:cleared": (p: { conversationId: string }) => void
   typing: (p: { conversationId: string; userId: string; isTyping: boolean }) => void

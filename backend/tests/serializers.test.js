@@ -19,8 +19,6 @@ const baseConversation = (overrides = {}) => ({
       deletedFor: [],
     },
   ],
-  requestStatus: "pending",
-  requestedBy: "u2",
   blockedBy: [],
   isGroup: false,
   lastMessageTime: new Date("2026-01-01"),
@@ -28,14 +26,14 @@ const baseConversation = (overrides = {}) => ({
   ...overrides,
 });
 
-test("pending request shows in the receiver's 'requests' folder with unread count", () => {
+test("receiver sees the chat in 'primary' with the unread count", () => {
   const result = serializeConversation(baseConversation(), "u1");
-  assert.equal(result.folder, "requests");
+  assert.equal(result.folder, "primary");
   assert.equal(result.unreadCount, 1);
   assert.equal(result.participant.username, "bob");
 });
 
-test("the person who sent the request sees it in 'primary'", () => {
+test("the sender sees the chat in 'primary' with nothing unread", () => {
   const result = serializeConversation(baseConversation(), "u2");
   assert.equal(result.folder, "primary");
   assert.equal(result.unreadCount, 0);
@@ -61,7 +59,7 @@ test("messages deleted for me are hidden", () => {
 
 test("group chats use the group name and member count", () => {
   const result = serializeConversation(
-    baseConversation({ isGroup: true, groupName: "Team", requestStatus: "accepted" }),
+    baseConversation({ isGroup: true, groupName: "Team" }),
     "u1"
   );
   assert.equal(result.participant.name, "Team");

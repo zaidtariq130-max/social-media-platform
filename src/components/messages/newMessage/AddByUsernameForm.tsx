@@ -54,7 +54,7 @@ export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
           />
         </div>
         <p className="text-[11px] text-slate-500 mt-1.5">
-          Enter the user's handle to send a direct message request. Once they accept, you can chat with them.
+          Enter your friend's handle to open a chat. You can only message people who accepted your friend request.
         </p>
         {error && (
           <p role="alert" className="text-[11px] text-rose-600 mt-1.5">
@@ -77,7 +77,7 @@ export default function AddByUsernameForm({ onSubmit, onCancel }: Props) {
           className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 shadow-sm transition"
           style={{ backgroundColor: colors.primary }}
         >
-          {loading ? "Searching..." : "Send Request"}
+          {loading ? "Searching..." : "Open Chat"}
         </button>
       </div>
     </form>

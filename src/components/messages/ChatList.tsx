@@ -3,7 +3,6 @@ import type { Conversation, FolderType, MessageUser } from "../../types/messages
 import { colors } from "../../theme"
 import {
   countBlocked,
-  countPendingRequests,
   countUnreadInGroups,
   filterConversations,
   getOnlineContacts,
@@ -38,7 +37,6 @@ export default function ChatList({
 }: ChatListProps) {
   const [searchQuery, setSearchQuery] = useState("")
 
-  const pendingRequestsCount = useMemo(() => countPendingRequests(conversations), [conversations])
   const blockedUsersCount = useMemo(() => countBlocked(conversations), [conversations])
   const unreadGroupsCount = useMemo(() => countUnreadInGroups(conversations), [conversations])
   const onlineContacts = useMemo(() => getOnlineContacts(conversations), [conversations])
@@ -59,10 +57,7 @@ export default function ChatList({
       className="flex flex-col h-full min-h-0 border-r select-none"
       style={{ backgroundColor: colors.cardBackground, borderColor: colors.border }}
     >
-      <ChatListHeader
-        currentUsername={currentUsername}
-        onOpenNewMessageModal={onOpenNewMessageModal}
-      />
+      <ChatListHeader currentUsername={currentUsername} />
 
       <div className="p-2.5 sm:p-3 shrink-0">
         <SearchInput
@@ -80,7 +75,6 @@ export default function ChatList({
         activeFolder={activeFolder}
         onChangeFolder={onChangeFolder}
         blockedCount={blockedUsersCount}
-        requestsCount={pendingRequestsCount}
         unreadGroupsCount={unreadGroupsCount}
       />
 

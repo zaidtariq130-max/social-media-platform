@@ -22,7 +22,7 @@ export const CHATBOT_SUGGESTIONS = [
   "How do I start a chat?",
   "How do I create a post?",
   "Why can't I reply to a message?",
-  "What is the difference between clear chat and delete conversation?",
+  "How do I add a friend?",
 ] as const
 
 export const CHATBOT_ERRORS = {

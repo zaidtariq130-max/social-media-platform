@@ -37,7 +37,7 @@ test("eval rules: good replies pass", () => {
   assert.deepEqual(
     problemsFor(
       "cant-reply",
-      "It's probably a message request. Open the Requests folder in Messages, open the chat and press Accept. Then you can reply."
+      "You may no longer be friends with them. Open Friends, check your friends list and accept any friend request from them."
     ),
     []
   );

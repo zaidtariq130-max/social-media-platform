@@ -44,6 +44,11 @@ tests/          node:test files
 | GET/POST/PUT/DELETE | `/api/posts` | |
 | GET | `/api/users?q=` | list / search |
 | GET | `/api/users/by-username/:username` | exact lookup for "add by @username" |
+| GET | `/api/users/me/stats` | real `postsCount`, `friendsCount`, `requestsCount` for the profile page |
+| GET | `/api/friends`, `/api/friends/people?q=` | my friends / other users with my relationship to each |
+| GET/POST | `/api/friends/requests` | `?type=incoming\|outgoing` / send `{ userId }` |
+| PUT | `/api/friends/requests/:id` | receiver answers `{ action: "accept" \| "decline" }` |
+| DELETE | `/api/friends/requests/:id`, `/api/friends/:userId` | sender cancels a pending request / unfriend |
 | GET/POST | `/api/conversations`, `/api/conversations/group` | |
 | PUT | `/api/conversations/:id/accept`, `/clear`, `/block` | `clear` hides history for *you only* |
 | DELETE | `/api/conversations/:id` | removes the chat **for both users** |
@@ -58,6 +63,9 @@ tests/          node:test files
   cannot build the username index until they are renamed.
 - **CSRF:** `/auth/refresh` and `/auth/logout` reject requests whose `Origin` header is not
   `CLIENT_URL`.
+- **Friend requests** live in one `Friendship` document per pair of users (`pending` -> `accepted` or
+  `declined`; unique `pairKey`). Socket events `friend:request` / `friend:updated` tell the other user
+  to refresh. A declined pair can send a new request later.
 - **Presence** is kept in memory. Running several server instances needs the Socket.io Redis adapter.
 
 ## Chatbot (Google Gemini)

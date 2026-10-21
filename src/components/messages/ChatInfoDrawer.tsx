@@ -12,7 +12,6 @@ interface Props {
   onClose: () => void
   onToggleBlockUser: (conversationId: string) => void
   onToggleMute: (conversationId: string) => void
-  onDeleteConversation: (conversationId: string) => void
   onClearMessages: (conversationId: string) => void
 }
 
@@ -22,7 +21,6 @@ export default function ChatInfoDrawer({
   onClose,
   onToggleBlockUser,
   onToggleMute,
-  onDeleteConversation,
   onClearMessages,
 }: Props) {
   useEffect(() => {
@@ -87,10 +85,6 @@ export default function ChatInfoDrawer({
               {isBlocked ? "Unblock" : "Block"} @{participant.username}
             </button>
           )}
-          <button type="button" className={`${action} text-rose-600`} onClick={() => onDeleteConversation(id)}>
-            <TrashIcon className="w-4 h-4" />
-            Remove contact
-          </button>
         </div>
       </aside>
     </div>

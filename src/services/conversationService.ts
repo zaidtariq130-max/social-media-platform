@@ -20,12 +20,10 @@ export function mapMessage(m: RawMessage): Message {
 
 /** Normalises a conversation from the API / socket. */
 export function mapConversation(c: RawConversation): Conversation {
-  const requestStatus = c.requestStatus ?? "accepted"
   return {
     ...(c as Conversation),
     messages: (c.messages ?? []).map((m) => mapMessage(m as unknown as RawMessage)),
-    folder: c.folder ?? (requestStatus === "accepted" ? "primary" : "requests"),
-    requestStatus,
+    folder: c.folder ?? "primary",
     isBlocked: c.isBlocked ?? false,
     isMuted: c.isMuted ?? false,
     unreadCount: c.unreadCount ?? 0,
